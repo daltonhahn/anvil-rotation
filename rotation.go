@@ -41,13 +41,17 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("Landed in assignment")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
-	nodeList := struct {
+	assignmentList := struct {
 		Nodes	[]string
+		SvcMap	struct {
+			Node	string
+			SvcList	[]string
+		}
 	}{}
-	err = json.Unmarshal(b, &nodeList)
+	err = json.Unmarshal(b, &assignmentList)
 	if err != nil {
 		log.Fatal()
 	}
-	fmt.Printf("%v\n", nodeList.Nodes)
+	fmt.Printf("%v\n", assignmentList.Nodes)
 	fmt.Fprint(w, "Getting assignments\n")
 }
