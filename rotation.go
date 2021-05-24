@@ -47,6 +47,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 			Node	string
 			SvcList	[]string
 		}
+		Iteration	int
 	}{}
 	err = json.Unmarshal(b, &assignmentList)
 	if err != nil {
