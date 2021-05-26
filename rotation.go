@@ -45,6 +45,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	assignmentList := struct {
 		Nodes	[]string
 		SvcMap	[]struct {
+			TokName		string
 			Node		string
 			Svc		string
 			ValidList	[]string

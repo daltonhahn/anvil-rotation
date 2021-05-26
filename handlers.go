@@ -20,6 +20,7 @@ import (
 var semaphore = make(chan struct{}, 250)
 
 type ACLMap struct {
+	TokName		string
 	Node            string
         Svc             string
         ValidList       []string
