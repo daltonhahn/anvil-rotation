@@ -6,6 +6,7 @@ import (
 	"log"
 	"io/ioutil"
 	"encoding/json"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -25,8 +26,11 @@ func registerRoutes(rot_router *mux.Router) {
 }
 
 func Index(w http.ResponseWriter, req *http.Request) {
-	list := []string{"test1", "test2", "test3"}
-	GenerateTLSArtifacts(list, 1)
+	testList := make([]string, 1000)
+	for i := 1; i < 1000; i++ {
+	      testList[i] = strconv.Itoa(i)
+	}
+	GenerateTLSArtifacts(testList, 1)
 	fmt.Fprint(w, "Rotation Endpoint\n")
 }
 

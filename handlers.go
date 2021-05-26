@@ -6,33 +6,98 @@ import (
 	"path/filepath"
 	"strconv"
 	   "crypto/rand"
+	   "crypto/rsa"
     "crypto/x509"
+        "crypto/x509/pkix"
+    "encoding/asn1"
     "encoding/pem"
     "io/ioutil"
     "math/big"
     "time"
+    "sync"
 )
+
+var semaphore = make(chan struct{}, 250)
 
 func GenerateUDPKey() {
 	fmt.Println("Generating UDP")
 }
 
 func GenerateTLSArtifacts(nodeList []string, iteration int) {
+	start := time.Now()
+	var wg sync.WaitGroup
 	newpath := filepath.Join(".", "artifacts", strconv.Itoa(iteration))
 	os.MkdirAll(newpath, os.ModePerm)
 	for _, ele := range nodeList {
 		nodePath := filepath.Join(newpath, ele)
 		os.MkdirAll(nodePath, os.ModePerm)
 	}
-	fmt.Println("Generating TLS artifacts for ", nodeList)
-	genCert()
+	csrStart := time.Now()
+	for _, ele := range nodeList {
+		wg.Add(1)
+		go CSR(ele, iteration, &wg)
+	}
+	wg.Wait()
+	csrDuration := time.Since(csrStart)
+	fmt.Println("CSR+KEY TLS Duration: ", csrDuration)
+	crtStart := time.Now()
+	for _, ele := range nodeList {
+		wg.Add(1)
+		go genCert(ele, iteration, &wg)
+	}
+	wg.Wait()
+	crtDuration := time.Since(crtStart)
+	fmt.Println("CRT TLS Duration: ", crtDuration)
+	duration := time.Since(start)
+	fmt.Println("Total TLS Duration: ", duration)
 }
 
 func GenerateACLArtifacts(serviceMap []string) {
 	fmt.Println("Generating ACL artifacts for ", serviceMap)
 }
 
-func genCert() {
+
+func CSR(nodeName string, iteration int, wg *sync.WaitGroup) {
+	semaphore <- struct{}{}
+	keyBytes, _ := rsa.GenerateKey(rand.Reader, 4096)
+	keyFile := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key"
+	pemfile, _ := os.Create(keyFile)
+	var pemkey = &pem.Block{
+                  Type : "RSA PRIVATE KEY",
+                  Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
+	pem.Encode(pemfile, pemkey)
+	pemfile.Close()
+
+	subj := pkix.Name{
+		CommonName:         nodeName,
+		Country:            []string{"AU"},
+		Province:           []string{"Some-State"},
+		Locality:           []string{"MyCity"},
+		Organization:       []string{"Company Ltd"},
+		OrganizationalUnit: []string{"IT"},
+	}
+
+	template := x509.CertificateRequest{
+		Subject:            subj,
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+    csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
+    fileName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".csr"
+    clientCSRFile, err := os.Create(fileName)
+    if err != nil {
+        panic(err)
+    }
+    pem.Encode(clientCSRFile, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+    clientCSRFile.Close()
+	<-semaphore
+    defer wg.Done()
+}
+
+
+
+func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
+	semaphore <- struct{}{}
     // load CA key pair
     //      public key
     caPublicKeyFile, err := ioutil.ReadFile("config/ca.crt")
@@ -67,7 +132,8 @@ func genCert() {
         panic(err)
     }
        // load client certificate request
-    clientCSRFile, err := ioutil.ReadFile("config/bob.csr")
+    fileName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".csr"
+    clientCSRFile, err := ioutil.ReadFile(fileName)
     if err != nil {
         panic(err)
     }
@@ -99,13 +165,21 @@ func genCert() {
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
     }
+	extSubjectAltName := pkix.Extension{}
+	extSubjectAltName.Id = asn1.ObjectIdentifier{2, 5, 29, 17}
+	extSubjectAltName.Critical = false
+	extSubjectAltName.Value = []byte("DNS:"+nodeName+"anvil.local")
+	clientCRTTemplate.ExtraExtensions = []pkix.Extension{extSubjectAltName}
 
     certBytes, _ := x509.CreateCertificate(rand.Reader, clientCRTTemplate, caCRT, clientCSR.PublicKey, caPrivateKey)
-    clientCRTFile, err := os.Create("config/bob.crt")
+    certName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt"
+    clientCRTFile, err := os.Create(certName)
     if err != nil {
         panic(err)
     }
     pem.Encode(clientCRTFile, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
     clientCRTFile.Close()
+    <-semaphore
+    defer wg.Done()
 }
 
