@@ -19,6 +19,12 @@ import (
 
 var semaphore = make(chan struct{}, 250)
 
+type ACLMap struct {
+	Node            string
+        Svc             string
+        ValidList       []string
+}
+
 func GenerateUDPKey() {
 	fmt.Println("Generating UDP")
 }
@@ -52,8 +58,8 @@ func GenerateTLSArtifacts(nodeList []string, iteration int) {
 	fmt.Println("Total TLS Duration: ", duration)
 }
 
-func GenerateACLArtifacts(serviceMap []string) {
-	fmt.Println("Generating ACL artifacts for ", serviceMap)
+func GenerateACLArtifacts(serviceMap []ACLMap) {
+	fmt.Printf("Generating ACL artifacts for: %v\n", serviceMap)
 }
 
 

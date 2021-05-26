@@ -26,11 +26,6 @@ func registerRoutes(rot_router *mux.Router) {
 }
 
 func Index(w http.ResponseWriter, req *http.Request) {
-	testList := make([]string, 1000)
-	for i := 1; i < 1000; i++ {
-	      testList[i] = strconv.Itoa(i)
-	}
-	GenerateTLSArtifacts(testList, 1)
 	fmt.Fprint(w, "Rotation Endpoint\n")
 }
 
@@ -49,9 +44,10 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	assignmentList := struct {
 		Nodes	[]string
-		SvcMap	struct {
-			Node	string
-			SvcList	[]string
+		SvcMap	[]struct {
+			Node		string
+			Svc		string
+			ValidList	[]string
 		}
 		Iteration	int
 	}{}
@@ -59,6 +55,16 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Fatal()
 	}
+
+	testList := make([]string, 1000)
+	for i := 1; i < 1000; i++ {
+	      testList[i] = strconv.Itoa(i)
+	}
+	//GenerateTLSArtifacts(testList, 1)
+	//GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
+
 	fmt.Printf("%v\n", assignmentList.Nodes)
+	fmt.Printf("%v\n", assignmentList.SvcMap)
+	fmt.Printf("%v\n", assignmentList.Iteration)
 	fmt.Fprint(w, "Getting assignments\n")
 }
