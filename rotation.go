@@ -25,6 +25,8 @@ func registerRoutes(rot_router *mux.Router) {
 }
 
 func Index(w http.ResponseWriter, req *http.Request) {
+	list := []string{"test1", "test2", "test3"}
+	GenerateTLSArtifacts(list, 1)
 	fmt.Fprint(w, "Rotation Endpoint\n")
 }
 
