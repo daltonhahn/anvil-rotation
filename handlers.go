@@ -5,19 +5,28 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	   "crypto/rand"
-	   "crypto/rsa"
-    "crypto/x509"
-        "crypto/x509/pkix"
-    "encoding/asn1"
-    "encoding/pem"
-    "io/ioutil"
-    "math/big"
-    "time"
-    "sync"
+	crand "crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/pem"
+	"io/ioutil"
+	"math/big"
+	"time"
+	"sync"
+	"math/rand"
+	b64 "encoding/base64"
 )
 
 var semaphore = make(chan struct{}, 250)
+
+const charset = "abcdefghijklmnopqrstuvwxyz" +
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var seededRand *rand.Rand = rand.New(
+  rand.NewSource(time.Now().UnixNano()))
+
 
 type ACLMap struct {
 	TokName		string
@@ -26,9 +35,25 @@ type ACLMap struct {
         ValidList       []string
 }
 
-func GenerateUDPKey() {
-	fmt.Println("Generating UDP")
+func GenerateUDPKey(iteration int) {
+	udpKey := (StringWithCharset(32, charset) + "\n")
+	fileName := "artifacts/"+strconv.Itoa(iteration)+"/gossip.key"
+	gossKeyFile, err := os.Create(fileName)
+	if err != nil {
+		panic(err)
+	}
+	_, err = gossKeyFile.Write([]byte(udpKey))
+	defer gossKeyFile.Close()
 }
+
+func StringWithCharset(length int, charset string) string {
+  b := make([]byte, length)
+  for i := range b {
+    b[i] = charset[seededRand.Intn(len(charset))]
+  }
+  return b64.StdEncoding.EncodeToString(b)
+}
+
 
 func GenerateTLSArtifacts(nodeList []string, iteration int) {
 	start := time.Now()
@@ -66,7 +91,7 @@ func GenerateACLArtifacts(serviceMap []ACLMap) {
 
 func CSR(nodeName string, iteration int, wg *sync.WaitGroup) {
 	semaphore <- struct{}{}
-	keyBytes, _ := rsa.GenerateKey(rand.Reader, 4096)
+	keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
 	keyFile := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key"
 	pemfile, _ := os.Create(keyFile)
 	var pemkey = &pem.Block{
@@ -89,7 +114,7 @@ func CSR(nodeName string, iteration int, wg *sync.WaitGroup) {
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
 
-    csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
+    csrBytes, _ := x509.CreateCertificateRequest(crand.Reader, &template, keyBytes)
     fileName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".csr"
     clientCSRFile, err := os.Create(fileName)
     if err != nil {
@@ -178,7 +203,7 @@ func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
 	extSubjectAltName.Value = []byte("DNS:"+nodeName+"anvil.local")
 	clientCRTTemplate.ExtraExtensions = []pkix.Extension{extSubjectAltName}
 
-    certBytes, _ := x509.CreateCertificate(rand.Reader, clientCRTTemplate, caCRT, clientCSR.PublicKey, caPrivateKey)
+    certBytes, _ := x509.CreateCertificate(crand.Reader, clientCRTTemplate, caCRT, clientCSR.PublicKey, caPrivateKey)
     certName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt"
     clientCRTFile, err := os.Create(certName)
     if err != nil {
