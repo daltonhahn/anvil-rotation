@@ -1,0 +1,55 @@
+{
+  "nodes": [
+    "node1",
+    "node2",
+    "node3",
+    "node4"
+  ],
+  "svcmap": [
+    {
+      "TokName": "A",
+      "Node": "node1",
+      "Svc": "db",
+      "ValidList": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ]
+    },
+    {
+      "TokName": "B",
+      "Node": "node2",
+      "Svc": "web",
+      "ValidList": [
+        "w",
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    {
+      "TokName": "C",
+      "Node": "node3",
+      "Svc": "log",
+      "ValidList": [
+        "aa",
+        "bb",
+        "cc",
+        "dd"
+      ]
+    },
+    {
+      "TokName": "D",
+      "Node": "node4",
+      "Svc": "raft",
+      "ValidList": [
+        "ww",
+        "xx",
+        "yy",
+        "zz"
+      ]
+    }
+  ],
+  "Iteration": 1
+}
