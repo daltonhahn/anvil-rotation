@@ -142,7 +142,7 @@ func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
         extSubjectAltName := pkix.Extension{}
         extSubjectAltName.Id = asn1.ObjectIdentifier{2, 5, 29, 17}
         extSubjectAltName.Critical = false
-        extSubjectAltName.Value = []byte("DNS:"+nodeName+"anvil.local")
+        extSubjectAltName.Value = []byte("DNS:"+nodeName)
         clientCRTTemplate.ExtraExtensions = []pkix.Extension{extSubjectAltName}
 
     certBytes, _ := x509.CreateCertificate(crand.Reader, clientCRTTemplate, caCRT, clientCSR.PublicKey, caPrivateKey)

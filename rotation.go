@@ -34,14 +34,6 @@ func registerRoutes(rot_router *mux.Router) {
 
 func Index(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(w, "Rotation Endpoint\n")
-	/*
-	entry1 := ACLMap{"A", "1", "db", []string{"w","x","y","z"}}
-	entry2 := ACLMap{"B", "2", "web", []string{"a","b","c","d"}}
-	entry3 := ACLMap{"C", "3", "log", []string{"ww","xx","yy","zz"}}
-	entry4 := ACLMap{"D", "4", "raft", []string{"aa","bb","cc","dd"}}
-	testMap = []ACLMap{entry1, entry2, entry3, entry4}
-	GenerateACLArtifacts(testMap, 1)
-	*/
 }
 
 func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
@@ -72,13 +64,13 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	}
 	*/
 
-	fmt.Printf("%v\n", assignmentList.Nodes)
-	fmt.Printf("%v\n", assignmentList.SvcMap)
-	fmt.Printf("%v\n", assignmentList.Iteration)
+	//fmt.Printf("%v\n", assignmentList.Nodes)
+	//fmt.Printf("%v\n", assignmentList.SvcMap)
+	//fmt.Printf("%v\n", assignmentList.Iteration)
 
 	CreateDirectories(assignmentList.Iteration)
 	GenerateUDPKey(assignmentList.Iteration)
-	GenerateTLSArtifacts(assignmentList.Nodes, 1)
+	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration)
 	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
 
 	fmt.Fprint(w, "Getting assignments\n")
