@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 
+	"strconv"
 	"github.com/gorilla/mux"
 )
 
@@ -34,6 +35,12 @@ func registerRoutes(rot_router *mux.Router) {
 
 func Index(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(w, "Rotation Endpoint\n")
+
+	assignmentList := make([]string, 10)
+	for i := 1; i < 10; i++ {
+	      assignmentList[i] = "test"+strconv.Itoa(i)
+	}
+	GenerateTLSArtifacts(assignmentList, 1)
 }
 
 func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
@@ -69,9 +76,9 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	//fmt.Printf("%v\n", assignmentList.Iteration)
 
 	CreateDirectories(assignmentList.Iteration)
-	GenerateUDPKey(assignmentList.Iteration)
+	//GenerateUDPKey(assignmentList.Iteration)
 	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration)
-	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
+	//GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
 
 	fmt.Fprint(w, "Getting assignments\n")
 }

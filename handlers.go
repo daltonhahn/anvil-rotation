@@ -39,12 +39,13 @@ func GenerateTLSArtifacts(nodeList []string, iteration int) {
 	//csrStart := time.Now()
 	for _, ele := range nodeList {
 		wg.Add(1)
-		go CSR(ele, iteration, &wg)
+		go GenPairs(ele, iteration, &wg)
 	}
 	wg.Wait()
 	//csrDuration := time.Since(csrStart)
 	//fmt.Println("CSR+KEY TLS Duration: ", csrDuration)
 	//crtStart := time.Now()
+	/*
 	for _, ele := range nodeList {
 		wg.Add(1)
 		go genCert(ele, iteration, &wg)
@@ -54,6 +55,7 @@ func GenerateTLSArtifacts(nodeList []string, iteration int) {
 	//fmt.Println("CRT TLS Duration: ", crtDuration)
 	//duration := time.Since(start)
 	//fmt.Println("Total TLS Duration: ", duration)
+	*/
 }
 
 func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {

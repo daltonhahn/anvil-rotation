@@ -1,19 +1,18 @@
 package main
 
 import (
-	"fmt"
         "os"
         "strconv"
         crand "crypto/rand"
         "crypto/rsa"
         "crypto/x509"
         "crypto/x509/pkix"
-        "encoding/asn1"
         "encoding/pem"
         "io/ioutil"
         "math/big"
         "time"
         "sync"
+	"log"
         "math/rand"
         b64 "encoding/base64"
 )
@@ -32,44 +31,75 @@ func StringWithCharset(length int, charset string) string {
   return b64.StdEncoding.EncodeToString(b)
 }
 
-func CSR(nodeName string, iteration int, wg *sync.WaitGroup) {
+func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
         semaphore <- struct{}{}
+	caPublicKeyFile, err := ioutil.ReadFile("config/ca.crt")
+	if err != nil {
+		panic(err)
+	}
+	pemBlock, _ := pem.Decode(caPublicKeyFile)
+	if pemBlock == nil {
+		panic("pem.Decode failed")
+	}
+	caCRT, err := x509.ParseCertificate(pemBlock.Bytes)
+	if err != nil {
+		panic(err)
+	}
+	caPrivateKeyFile, err := ioutil.ReadFile("config/ca.key")
+	if err != nil {
+		panic(err)
+	}
+	pemBlock, _ = pem.Decode(caPrivateKeyFile)
+	if pemBlock == nil {
+		panic("pem.Decode failed")
+	}
+	caPrivateKey, err := x509.ParsePKCS8PrivateKey(pemBlock.Bytes)
+	if err != nil {
+		panic(err)
+	}
         keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
-        keyFile := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key"
-        pemfile, _ := os.Create(keyFile)
+        pemfile, _ := os.Create("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
         var pemkey = &pem.Block{
-                  Type : "RSA PRIVATE KEY",
-                  Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
-        pem.Encode(pemfile, pemkey)
+		Type : "RSA PRIVATE KEY",
+		Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
+	pem.Encode(pemfile, pemkey)
         pemfile.Close()
 
-        subj := pkix.Name{
-                CommonName:         nodeName,
-                Country:            []string{"AU"},
-                Province:           []string{"Some-State"},
-                Locality:           []string{"MyCity"},
-                Organization:       []string{"Company Ltd"},
-                OrganizationalUnit: []string{"IT"},
-        }
+	cert := &x509.Certificate{
+		SerialNumber: big.NewInt(2019),
+		Subject: pkix.Name{
+			Organization:  []string{"Anvil"},
+			Country:       []string{"US"},
+			Province:      []string{""},
+			Locality:      []string{""},
+			StreetAddress: []string{""},
+			PostalCode:    []string{""},
+		},
+		DNSNames:     []string{nodeName},
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().AddDate(10, 0, 0),
+		SubjectKeyId: []byte{1, 2, 3, 4, 6},
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+	}
 
-        template := x509.CertificateRequest{
-                Subject:            subj,
-                SignatureAlgorithm: x509.SHA256WithRSA,
-        }
+	certBytes, err := x509.CreateCertificate(crand.Reader, cert, caCRT, &keyBytes.PublicKey, caPrivateKey)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-    csrBytes, _ := x509.CreateCertificateRequest(crand.Reader, &template, keyBytes)
-    fileName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".csr"
-    clientCSRFile, err := os.Create(fileName)
-    if err != nil {
-        panic(err)
-    }
-    pem.Encode(clientCSRFile, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
-    clientCSRFile.Close()
-        <-semaphore
-    defer wg.Done()
+	certPEM, _ := os.Create("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt")
+	pem.Encode(certPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certBytes,
+	})
+
+	<-semaphore
+	defer wg.Done()
 }
 
 
+/*
 func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
         semaphore <- struct{}{}
     // load CA key pair
@@ -96,11 +126,12 @@ func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
     if pemBlock == nil {
         panic("pem.Decode failed")
     }
-    der, err := x509.DecryptPEMBlock(pemBlock, []byte("123456"))
+    /*
+    der, err := x509.DecryptPEMBlock(pemBlock, []byte(""))
     if err != nil {
         panic(err)
     }
-    caPrivateKey, err := x509.ParsePKCS1PrivateKey(der)
+    caPrivateKey, err := x509.ParsePKCS8PrivateKey(pemBlock.Bytes)//der
     if err != nil {
         fmt.Println("NOT PARSING")
         panic(err)
@@ -139,11 +170,6 @@ func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
     }
-        extSubjectAltName := pkix.Extension{}
-        extSubjectAltName.Id = asn1.ObjectIdentifier{2, 5, 29, 17}
-        extSubjectAltName.Critical = false
-        extSubjectAltName.Value = []byte("DNS:"+nodeName)
-        clientCRTTemplate.ExtraExtensions = []pkix.Extension{extSubjectAltName}
 
     certBytes, _ := x509.CreateCertificate(crand.Reader, clientCRTTemplate, caCRT, clientCSR.PublicKey, caPrivateKey)
     certName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt"
@@ -156,3 +182,4 @@ func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
     <-semaphore
     defer wg.Done()
 }
+*/
