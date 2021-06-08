@@ -15,6 +15,7 @@ import (
 	"log"
         "math/rand"
         b64 "encoding/base64"
+	"path/filepath"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
@@ -22,6 +23,8 @@ const charset = "abcdefghijklmnopqrstuvwxyz" +
 
 var seededRand *rand.Rand = rand.New(
   rand.NewSource(time.Now().UnixNano()))
+
+var semaphore = make(chan struct{}, 250)
 
 func StringWithCharset(length int, charset string) string {
   b := make([]byte, length)
@@ -31,9 +34,90 @@ func StringWithCharset(length int, charset string) string {
   return b64.StdEncoding.EncodeToString(b)
 }
 
+func GenCA(iteration int, numQ int) {
+        newpath := filepath.Join(".", "config", strconv.Itoa(iteration))
+        os.MkdirAll(newpath, os.ModePerm)
+        CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
+        pemfile, _ := os.Create("config/"+strconv.Itoa(iteration)+"/ca.key")
+        var pemkey = &pem.Block{
+                Type : "RSA PRIVATE KEY",
+                Bytes : x509.MarshalPKCS1PrivateKey(CAkeyBytes)}
+        pem.Encode(pemfile, pemkey)
+        pemfile.Close()
+
+        CAcert := &x509.Certificate{
+                SerialNumber: big.NewInt(2019),
+                Subject: pkix.Name{
+                        Organization:  []string{"Anvil"},
+                        Country:       []string{"US"},
+                        Province:      []string{""},
+                        Locality:      []string{""},
+                        StreetAddress: []string{""},
+                        PostalCode:    []string{""},
+                },
+                NotBefore:              time.Now(),
+                NotAfter:               time.Now().AddDate(10, 0, 0),
+                IsCA:                   true,
+                ExtKeyUsage:            []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+                KeyUsage:               x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+                BasicConstraintsValid:  true,
+        }
+
+        certBytes, err := x509.CreateCertificate(crand.Reader, CAcert, CAcert, &CAkeyBytes.PublicKey, CAkeyBytes)
+        if err != nil {
+                log.Fatalln(err)
+        }
+
+        certPEM, _ := os.Create("config/"+strconv.Itoa(iteration)+"/ca.crt")
+        pem.Encode(certPEM, &pem.Block{
+                Type:  "CERTIFICATE",
+                Bytes: certBytes,
+	})
+
+	// Make gofunc()
+	for i := 1; i < numQ+1; i++ {
+		keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
+		pemfile, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
+		var pemkey = &pem.Block{
+			Type : "RSA PRIVATE KEY",
+			Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
+		pem.Encode(pemfile, pemkey)
+		pemfile.Close()
+
+		cert := &x509.Certificate{
+			SerialNumber: big.NewInt(2019),
+			Subject: pkix.Name{
+				Organization:  []string{"Anvil"},
+				Country:       []string{"US"},
+				Province:      []string{""},
+				Locality:      []string{""},
+				StreetAddress: []string{""},
+				PostalCode:    []string{""},
+			},
+			NotBefore:              time.Now(),
+			NotAfter:               time.Now().AddDate(10, 0, 0),
+			IsCA:                   true,
+			ExtKeyUsage:            []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+			KeyUsage:               x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+			BasicConstraintsValid:  true,
+		}
+
+	        certBytes, err := x509.CreateCertificate(crand.Reader, cert, CAcert, &keyBytes.PublicKey, CAkeyBytes)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		certPEM, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt")
+		pem.Encode(certPEM, &pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: certBytes,
+		})
+	}
+}
+
 func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
         semaphore <- struct{}{}
-	caPublicKeyFile, err := ioutil.ReadFile("config/ca.crt")
+	caPublicKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/ca.crt")
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +129,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
-	caPrivateKeyFile, err := ioutil.ReadFile("config/ca.key")
+	caPrivateKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/ca.key")
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +137,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
 	if pemBlock == nil {
 		panic("pem.Decode failed")
 	}
-	caPrivateKey, err := x509.ParsePKCS8PrivateKey(pemBlock.Bytes)
+	caPrivateKey, err := x509.ParsePKCS1PrivateKey(pemBlock.Bytes)
 	if err != nil {
 		panic(err)
 	}
@@ -97,89 +181,3 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
 	<-semaphore
 	defer wg.Done()
 }
-
-
-/*
-func genCert(nodeName string, iteration int, wg *sync.WaitGroup) {
-        semaphore <- struct{}{}
-    // load CA key pair
-    //      public key
-    caPublicKeyFile, err := ioutil.ReadFile("config/ca.crt")
-    if err != nil {
-        panic(err)
-    }
-    pemBlock, _ := pem.Decode(caPublicKeyFile)
-    if pemBlock == nil {
-        panic("pem.Decode failed")
-    }
-    caCRT, err := x509.ParseCertificate(pemBlock.Bytes)
-    if err != nil {
-        panic(err)
-    }
-
-    //      private key
-    caPrivateKeyFile, err := ioutil.ReadFile("config/ca.key")
-    if err != nil {
-        panic(err)
-    }
-    pemBlock, _ = pem.Decode(caPrivateKeyFile)
-    if pemBlock == nil {
-        panic("pem.Decode failed")
-    }
-    /*
-    der, err := x509.DecryptPEMBlock(pemBlock, []byte(""))
-    if err != nil {
-        panic(err)
-    }
-    caPrivateKey, err := x509.ParsePKCS8PrivateKey(pemBlock.Bytes)//der
-    if err != nil {
-        fmt.Println("NOT PARSING")
-        panic(err)
-    }
-       // load client certificate request
-    fileName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".csr"
-    clientCSRFile, err := ioutil.ReadFile(fileName)
-    if err != nil {
-        panic(err)
-    }
-    pemBlock, _ = pem.Decode(clientCSRFile)
-    if pemBlock == nil {
-        panic("pem.Decode failed")
-    }
-    clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes)
-    if err != nil {
-        panic(err)
-    }
-    if err = clientCSR.CheckSignature(); err != nil {
-        panic(err)
-    }
-
-    // create client certificate template
-    clientCRTTemplate := &x509.Certificate{
-        Signature:          clientCSR.Signature,
-        SignatureAlgorithm: clientCSR.SignatureAlgorithm,
-
-        PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
-        PublicKey:          clientCSR.PublicKey,
-
-        SerialNumber: big.NewInt(2),
-        Issuer:       caCRT.Subject,
-        Subject:      clientCSR.Subject,
-        NotBefore:    time.Now(),
-        NotAfter:     time.Now().Add(24 * time.Hour),
-        KeyUsage:     x509.KeyUsageDigitalSignature,
-        ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-    }
-
-    certBytes, _ := x509.CreateCertificate(crand.Reader, clientCRTTemplate, caCRT, clientCSR.PublicKey, caPrivateKey)
-    certName := "artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt"
-    clientCRTFile, err := os.Create(certName)
-    if err != nil {
-        panic(err)
-    }
-    pem.Encode(clientCRTFile, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
-    clientCRTFile.Close()
-    <-semaphore
-    defer wg.Done()
-}
-*/

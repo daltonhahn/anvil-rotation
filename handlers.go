@@ -10,11 +10,13 @@ import (
 	"log"
 )
 
-var semaphore = make(chan struct{}, 250)
-
 func CreateDirectories(iteration int) {
 	newpath := filepath.Join(".", "artifacts", strconv.Itoa(iteration))
 	os.MkdirAll(newpath, os.ModePerm)
+}
+
+func CreateCAInfra(iteration int, numQ int) {
+	GenCA(iteration, numQ)
 }
 
 func GenerateUDPKey(iteration int) {
