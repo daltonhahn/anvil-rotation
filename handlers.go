@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -61,7 +61,6 @@ func GenerateTLSArtifacts(nodeList []string, iteration int) {
 }
 
 func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {
-	fmt.Printf("Generating ACL artifacts for: %v\n", serviceMap)
 	fileName := "artifacts/"+strconv.Itoa(iteration)+"/acls.yaml"
         ACLFile, err := os.Create(fileName)
         if err != nil {
