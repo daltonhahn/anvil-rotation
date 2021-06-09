@@ -94,6 +94,7 @@ func GenCA(iteration int, numQ int) {
 				StreetAddress: []string{""},
 				PostalCode:    []string{""},
 			},
+			DNSNames:		[]string{"server"+strconv.Itoa(i)},
 			NotBefore:              time.Now(),
 			NotAfter:               time.Now().AddDate(10, 0, 0),
 			IsCA:                   true,
