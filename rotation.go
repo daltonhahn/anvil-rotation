@@ -18,7 +18,7 @@ type ACLMap struct {
         TokName         string
         Node            string
         Svc             string
-        ValidList       []string
+        Valid	       []string
 }
 
 var testMap []ACLMap
@@ -134,6 +134,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Fatal()
 	}
+
 	CreateDirectories(assignmentList.Iteration)
 	GenerateUDPKey(assignmentList.Iteration)
 	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration)

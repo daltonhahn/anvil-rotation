@@ -75,7 +75,7 @@ func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {
 		tokVal := StringWithCharset(64, charset)
 		fullACLs.WriteString("  val: " + tokVal + "\n")
 		fullACLs.WriteString("  services:\n")
-		for _,sname := range ele.ValidList {
+		for _,sname := range ele.Valid {
 			fullACLs.WriteString("    - " + sname + "\n")
 		}
 		nodeACL := "artifacts/"+strconv.Itoa(iteration)+"/"+ ele.Node + "/acl.yaml"
