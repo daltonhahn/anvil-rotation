@@ -26,7 +26,7 @@ func GenerateUDPKey(iteration int) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = gossKeyFile.Write([]byte(udpKey))
+	_, err = gossKeyFile.Write([]byte(udpKey[:32]))
 	defer gossKeyFile.Close()
 }
 
