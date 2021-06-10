@@ -10,6 +10,7 @@ import (
         "crypto/x509/pkix"
         "encoding/pem"
         "io/ioutil"
+	"io"
         "math/big"
         "time"
         "sync"
@@ -17,6 +18,8 @@ import (
         "math/rand"
         b64 "encoding/base64"
 	"path/filepath"
+	"archive/tar"
+	"compress/gzip"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
@@ -77,7 +80,6 @@ func GenCA(iteration int, numQ int) {
 
 	// Make gofunc()
 	for i := 1; i < numQ+1; i++ {
-		// Get IPs
 		ips, _ := net.LookupIP("server"+strconv.Itoa(i))
 		var targIP net.IP
 		if ips[0].Equal(net.ParseIP("127.0.0.1")) {
@@ -124,6 +126,25 @@ func GenCA(iteration int, numQ int) {
 			Type:  "CERTIFICATE",
 			Bytes: certBytes,
 		})
+		//Compress files here
+		fileCompress := []string{
+			"config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt",
+			"config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key",
+			"config/"+strconv.Itoa(iteration)+"/ca.crt",
+		}
+		// Create output file
+		out, err := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".tar.gz")
+		if err != nil {
+			log.Fatalln("Error writing archive:", err)
+		}
+		defer out.Close()
+
+		// Create the archive and write the output to the "out" Writer
+		err = createArchive(fileCompress, out)
+		if err != nil {
+			log.Fatalln("Error creating archive:", err)
+		}
+
 	}
 }
 
@@ -200,4 +221,67 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
 
 	<-semaphore
 	defer wg.Done()
+}
+
+
+func createArchive(files []string, buf io.Writer) error {
+	// Create new Writers for gzip and tar
+	// These writers are chained. Writing to the tar writer will
+	// write to the gzip writer which in turn will write to
+	// the "buf" writer
+	gw := gzip.NewWriter(buf)
+	defer gw.Close()
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	// Iterate over files and add them to the tar archive
+	for _, file := range files {
+		err := addToArchive(tw, file)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addToArchive(tw *tar.Writer, filename string) error {
+	// Open the file which will be written into the archive
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Get FileInfo about our file providing file size, mode, etc.
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	// Create a tar Header from the FileInfo data
+	header, err := tar.FileInfoHeader(info, info.Name())
+	if err != nil {
+		return err
+	}
+
+	// Use full path as name (FileInfoHeader only takes the basename)
+	// If we don't do this the directory strucuture would
+	// not be preserved
+	// https://golang.org/src/archive/tar/common.go?#L626
+	header.Name = filename
+
+	// Write file header to the tar archive
+	err = tw.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+
+	// Copy file content to tar archive
+	_, err = io.Copy(tw, file)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
