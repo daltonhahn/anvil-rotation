@@ -105,7 +105,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	defer out.Close()
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
-	fmt.Printf("FULL URL PATH: http://%v:8080/sendCA/%v/%v", leaderIP, caContent.Iteration, caContent.Prefix)
 	resp, err := http.Get("http://"+ leaderIP +"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix)
 	if err != nil {
 		fmt.Printf("FAILURE RETRIEVING FILE\n")

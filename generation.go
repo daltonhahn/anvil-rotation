@@ -133,7 +133,7 @@ func GenCA(iteration int, numQ int) {
 		outFile := "config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".tar.gz"
 		exec.Command("/usr/bin/tar", "-czf", outFile, fileCompress[0], fileCompress[1], fileCompress[2]).Output()
 	}
-	//time.Sleep(5*time.Second)
+	time.Sleep(5*time.Second)
 }
 
 func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
