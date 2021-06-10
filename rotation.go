@@ -80,6 +80,7 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
 func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
+	fmt.Println("Trying to send file to requester")
 	filepath := "config/"+ca_iter+"/"+ca_target+".tar.gz"
 	http.ServeFile(w, req, filepath)
 }
@@ -105,7 +106,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	fmt.Printf("FULL URL PATH: http://%v:8080/sendCA/%v/%v", leaderIP, caContent.Iteration, caContent.Prefix)
-	resp, err := http.Get("http://"+ leaderIP +":8080/sendCA/"+caContent.Iteration+"/"+caContent.Prefix)
+	resp, err := http.Get("http://"+ leaderIP +"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix)
 	if err != nil {
 		fmt.Printf("FAILURE RETRIEVING FILE\n")
 	}
@@ -119,7 +120,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	}
 		// Unpack and place where necessary
 		// FINISH Me
-	fmt.Fprint(w, "Notified Quorum\n")
+	//fmt.Fprint(w, "Notified Quorum\n")
 }
 
 func AssignedPortion(w http.ResponseWriter, req *http.Request) {
