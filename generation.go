@@ -2,6 +2,7 @@ package main
 
 import (
         "os"
+	"fmt"
 	//"os/exec"
 	"net"
         "strconv"
@@ -131,12 +132,8 @@ func GenCA(iteration int, numQ int) {
 			"config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key",
 			"config/"+strconv.Itoa(iteration)+"/ca.crt",
 		}
-		outFile := "config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".tar.gz"
+		outFile := "config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".zip"
 		err = archiver.Archive(fileCompress, outFile)
-		if err != nil {
-			fmt.Println(err)
-		}
-		err = os.Rename(outFile, "config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".bnd")
 		if err != nil {
 			fmt.Println(err)
 		}

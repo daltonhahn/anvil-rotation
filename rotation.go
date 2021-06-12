@@ -81,7 +81,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
 	fmt.Println("Trying to send file to requester")
-	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target+".bnd"
+	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target+".zip"
 	http.ServeFile(w, req, filepath)
 }
 
@@ -98,7 +98,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                 log.Fatal(err)
 	}
 	fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
-	out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".bnd", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".zip", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil  {
 		fmt.Printf("FAILURE OPENING FILE\n")
 	}
