@@ -81,8 +81,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
 	fmt.Println("Trying to send file to requester")
-	filepath := "config/"+ca_iter+"/"+ca_target+".tar.gz"
-	w.Header().Set("Content-Type", "text/gzip")
+	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target+".bnd"
 	http.ServeFile(w, req, filepath)
 }
 
@@ -99,7 +98,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                 log.Fatal(err)
 	}
 	fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
-	out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".tar.gz", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".bnd", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil  {
 		fmt.Printf("FAILURE OPENING FILE\n")
 	}
@@ -108,7 +107,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
 	pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix, nil)
-	pReq.Header.Add("Accept-Encoding", "gzip")
+	//pReq, err := http.NewRequest("GET", "http://localhost:8080/sendCA/"+caContent.Iteration+"/"+caContent.Prefix, nil)
 	resp, err := client.Do(pReq)
 	if err != nil {
 		fmt.Printf("FAILURE RETRIEVING FILE\n")
