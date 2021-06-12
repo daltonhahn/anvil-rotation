@@ -82,6 +82,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_iter := mux.Vars(req)["iter"]
 	fmt.Println("Trying to send file to requester")
 	filepath := "config/"+ca_iter+"/"+ca_target+".tar.gz"
+	w.Header().Set("Content-Type", "text/gzip")
 	http.ServeFile(w, req, filepath)
 }
 
@@ -105,7 +106,10 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	defer out.Close()
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
-	resp, err := http.Get("http://"+ leaderIP +"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix)
+	client := new(http.Client)
+	pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix, nil)
+	pReq.Header.Add("Accept-Encoding", "gzip")
+	resp, err := client.Do(pReq)
 	if err != nil {
 		fmt.Printf("FAILURE RETRIEVING FILE\n")
 	}

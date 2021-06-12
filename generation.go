@@ -2,7 +2,8 @@ package main
 
 import (
         "os"
-        "os/exec"
+	"fmt"
+	//"os/exec"
 	"net"
         "strconv"
         crand "crypto/rand"
@@ -18,6 +19,7 @@ import (
         "math/rand"
         b64 "encoding/base64"
 	"path/filepath"
+	archiver "github.com/mholt/archiver/v3"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
@@ -131,9 +133,11 @@ func GenCA(iteration int, numQ int) {
 			"config/"+strconv.Itoa(iteration)+"/ca.crt",
 		}
 		outFile := "config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".tar.gz"
-		exec.Command("/usr/bin/tar", "-czf", outFile, fileCompress[0], fileCompress[1], fileCompress[2]).Output()
+		err = archiver.Archive(fileCompress, outFile)
+		//exec.Command("/usr/bin/tar", "-czf", outFile, fileCompress[0], fileCompress[1], fileCompress[2]).Output()
+		fmt.Println(err)
 	}
-	time.Sleep(5*time.Second)
+	//time.Sleep(5*time.Second)
 }
 
 func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
