@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"os"
+	//"os/exec"
 	"io"
 	//"net"
 
@@ -82,6 +83,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_iter := mux.Vars(req)["iter"]
 	fmt.Println("Trying to send file to requester")
 	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target+".zip"
+	w.Header().Set("Content-Type", "application/zip")
 	http.ServeFile(w, req, filepath)
 }
 
@@ -107,7 +109,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
 	pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix, nil)
-	//pReq, err := http.NewRequest("GET", "http://localhost:8080/sendCA/"+caContent.Iteration+"/"+caContent.Prefix, nil)
 	resp, err := client.Do(pReq)
 	if err != nil {
 		fmt.Printf("FAILURE RETRIEVING FILE\n")
