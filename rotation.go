@@ -84,6 +84,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("Trying to send file to requester")
 	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target+".zip"
 	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+ca_target+".zip"+"\"")
 	http.ServeFile(w, req, filepath)
 }
 
