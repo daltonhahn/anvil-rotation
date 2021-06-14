@@ -33,7 +33,8 @@ func main() {
 func registerRoutes(rot_router *mux.Router) {
     rot_router.HandleFunc("/bundle/{client_name}", RetrieveBundle).Methods("GET")
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
-    rot_router.HandleFunc("/missing", CollectAll).Methods("GET")
+    rot_router.HandleFunc("/missing/{iter}/{file}", CollectAll).Methods("GET")
+    rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
     rot_router.HandleFunc("/makeCA", MakeCA).Methods("POST")
     rot_router.HandleFunc("/pullCA", PullCA).Methods("POST")
     rot_router.HandleFunc("/sendCA/{iter}/{name}", SendCA).Methods("GET")
@@ -54,11 +55,25 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprint(w, "Sending all artifacts of current iteration\n")
-	// Find the highest iteration num so far
-	// Open this directory
+	//iter := mux.Vars(req)["iter"]
+	//fmt.Fprint(w, "Sending all artifacts of current iteration\n")
+	// Open directory by iter num
+	// Adjust filepath based on what is requested after "iter"
+	filepath := "test.json.example"
+	w.Header().Set("Content-Type", "application/text")
+	http.ServeFile(w, req, filepath)
+	//
 	// Open all Client directories and send .tar.gz files within
 		// Only send the .tar.gz files that you were responsible for generating
+}
+
+func CollectDirs(w http.ResponseWriter, req *http.Request) {
+	//iter := mux.Vars(req)["iter"]
+	fmt.Fprint(w, "Sending list of directories for recipient to create\n")
+	// Open directory by iter num
+	// Get a list of all directory names
+	// Send this list to the requester so that they can make the directories 
+	// on their end and then pull the right files
 }
 
 func MakeCA(w http.ResponseWriter, req *http.Request) {
