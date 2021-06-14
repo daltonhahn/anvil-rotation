@@ -57,6 +57,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Landed in CollectSignal")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
@@ -72,6 +73,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
 		//pReq, err := http.NewRequest("GET", "http://localhost:8080/missingDirs/"+pullMap.Iteration, nil)
+		fmt.Println("Making a request to ", t)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 		resp, err := client.Do(pReq)
 
@@ -85,12 +87,14 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Fatal()
 		}
+		fmt.Println("Unmarshaled response from ", t)
 
 		// Make the directories that are in missMap
 		for _, d := range missMap.Directories {
 			newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
 			os.MkdirAll(newpath, os.ModePerm)
 		}
+		fmt.Println("Made directories that were told by ", t)
 
 		// For loop the files that are missing in FPaths and save them
 		// When pulling the acls.yaml file, make small edit and append to your own
