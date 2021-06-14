@@ -96,7 +96,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		// When pulling the acls.yaml file, make small edit and append to your own
 		// Move onto the next target and repeat the process from pulling missMap
 	}
-	fmt.Fprintf(w, "RECEIVED: %v\n", missMap)
+	fmt.Fprintf(w, "DONE\n")
 }
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
