@@ -78,7 +78,14 @@ func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {
 		for _,sname := range ele.Valid {
 			fullACLs.WriteString("    - " + sname + "\n")
 		}
-		nodeACL := "artifacts/"+strconv.Itoa(iteration)+"/"+ ele.Node + "/acl.yaml"
+		ACLpath := "artifacts/"+strconv.Itoa(iteration)+"/"+ ele.Node
+		if _, err := os.Stat(ACLpath); os.IsNotExist(err) {
+			err := os.MkdirAll(ACLpath, os.ModePerm)
+			if err != nil {
+				log.Println("Node folder did not exist and couldn't make acl file")
+			}
+		}
+		nodeACL :=  ACLpath + "/acl.yaml"
 		f, err := os.OpenFile(nodeACL, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 		    log.Fatal(err)
