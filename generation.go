@@ -127,9 +127,9 @@ func GenCA(iteration int, numQ int) {
 	}
 }
 
-func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
+func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string) {
         semaphore <- struct{}{}
-	caPublicKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/ca.crt")
+	caPublicKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/"+prefix+".crt")
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +141,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
-	caPrivateKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/ca.key")
+	caPrivateKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/"+prefix+".key")
 	if err != nil {
 		panic(err)
 	}

@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"os"
-	//"os/exec"
+	"os/exec"
 	"io"
-	//"net"
+	"path/filepath"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -167,18 +167,25 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			resp, err = client.Do(pReq)
 		}
 	}
-		// Unpack and place where necessary
-		// FINISH Me
-	//fmt.Fprint(w, "Notified Quorum\n")
+	// Copy files from /root/anvil/config/* into a newly made anvil-rotation/config/iteration/ directory
+
+        newpath := filepath.Join(".", "config", caContent.Iteration)
+        os.MkdirAll(newpath, os.ModePerm)
+	exec.Command("/usr/bin/cp", "/root/anvil/config/ca.crt", "/root/anvil-rotation/config"+caContent.Iteration+"/ca.crt").Output()
+	exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".crt", "/root/anvil-rotation/config"+caContent.Iteration+"/"+caContent.Prefix+".crt").Output()
+	exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".key", "/root/anvil-rotation/config"+caContent.Iteration+"/"+caContent.Prefix+".key").Output()
+	fmt.Fprint(w, "Notified Quorum\n")
 }
+
 
 func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	assignmentList := struct {
-		Nodes	[]string
-		SvcMap	[]ACLMap
+		Nodes		[]string
+		SvcMap		[]ACLMap
 		Iteration	int
+		Prefix		string
 	}{}
 	err = json.Unmarshal(b, &assignmentList)
 	if err != nil {
@@ -187,7 +194,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 
 	CreateDirectories(assignmentList.Iteration)
 	GenerateUDPKey(assignmentList.Iteration)
-	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration)
+	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration, assignmentList.Prefix)
 	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
 	fmt.Fprint(w, "200 OK \r\n")
 }

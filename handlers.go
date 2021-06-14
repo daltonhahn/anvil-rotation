@@ -30,7 +30,7 @@ func GenerateUDPKey(iteration int) {
 	defer gossKeyFile.Close()
 }
 
-func GenerateTLSArtifacts(nodeList []string, iteration int) {
+func GenerateTLSArtifacts(nodeList []string, iteration int, prefix string) {
 	//start := time.Now()
 	var wg sync.WaitGroup
 	newpath := filepath.Join(".", "artifacts", strconv.Itoa(iteration))
@@ -41,7 +41,7 @@ func GenerateTLSArtifacts(nodeList []string, iteration int) {
 	//csrStart := time.Now()
 	for _, ele := range nodeList {
 		wg.Add(1)
-		go GenPairs(ele, iteration, &wg)
+		go GenPairs(ele, iteration, &wg, prefix)
 	}
 	wg.Wait()
 	//csrDuration := time.Since(csrStart)
