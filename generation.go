@@ -2,7 +2,6 @@ package main
 
 import (
         "os"
-	"fmt"
 	//"os/exec"
 	"net"
         "strconv"
@@ -19,7 +18,6 @@ import (
         "math/rand"
         b64 "encoding/base64"
 	"path/filepath"
-	archiver "github.com/mholt/archiver/v3"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
@@ -126,17 +124,6 @@ func GenCA(iteration int, numQ int) {
 			Type:  "CERTIFICATE",
 			Bytes: certBytes,
 		})
-		//Compress files here
-		fileCompress := []string{
-			"config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt",
-			"config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key",
-			"config/"+strconv.Itoa(iteration)+"/ca.crt",
-		}
-		outFile := "config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".zip"
-		err = archiver.Archive(fileCompress, outFile)
-		if err != nil {
-			fmt.Println(err)
-		}
 	}
 }
 

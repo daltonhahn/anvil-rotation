@@ -82,9 +82,8 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
 	fmt.Println("Trying to send file to requester")
-	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target+".zip"
-	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+ca_target+".zip"+"\"")
+	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target
+	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, filepath)
 }
 
@@ -100,27 +99,51 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
 	}
-	fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
-	out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".zip", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil  {
-		fmt.Printf("FAILURE OPENING FILE\n")
-	}
-	defer out.Close()
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
-	pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix, nil)
-	resp, err := client.Do(pReq)
-	if err != nil {
-		fmt.Printf("FAILURE RETRIEVING FILE\n")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		fmt.Errorf("bad status: %s", resp.Status)
-	}
-	_, err = io.Copy(out, resp.Body)
-	if err != nil  {
-		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+	var resp *http.Response
+	var out *os.File
+	for i:=0; i < 3; i++ {
+		if i == 0 {
+			fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
+			out, err := os.OpenFile("/root/anvil/config/ca.crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+			if err != nil  {
+				fmt.Printf("FAILURE OPENING FILE\n")
+			}
+			defer out.Close()
+			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/ca.crt", nil)
+			resp, err = client.Do(pReq)
+		} else if i == 1 {
+			fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
+			out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+			if err != nil  {
+				fmt.Printf("FAILURE OPENING FILE\n")
+			}
+			defer out.Close()
+			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix+".crt", nil)
+			resp, err = client.Do(pReq)
+		} else if i == 2 {
+			fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
+			out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+			if err != nil  {
+				fmt.Printf("FAILURE OPENING FILE\n")
+			}
+			defer out.Close()
+			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix+".key", nil)
+			resp, err = client.Do(pReq)
+		}
+		if err != nil {
+			fmt.Printf("FAILURE RETRIEVING FILE\n")
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			fmt.Errorf("bad status: %s", resp.Status)
+		}
+		_, err = io.Copy(out, resp.Body)
+		if err != nil  {
+			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		}
 	}
 		// Unpack and place where necessary
 		// FINISH Me
