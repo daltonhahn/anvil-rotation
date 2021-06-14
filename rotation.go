@@ -191,6 +191,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	assignmentList := struct {
 		Nodes		[]string
 		SvcMap		[]ACLMap
+		Gossip		bool
 		Iteration	int
 		Prefix		string
 	}{}
@@ -200,7 +201,9 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	}
 
 	CreateDirectories(assignmentList.Iteration)
-	GenerateUDPKey(assignmentList.Iteration)
+	if (assignmentList.Gossip == true) {
+		GenerateUDPKey(assignmentList.Iteration)
+	}
 	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration, assignmentList.Prefix)
 	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
 	fmt.Fprint(w, "200 OK \r\n")
