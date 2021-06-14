@@ -116,9 +116,15 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]
-	remPath := mux.Vars(req)["rem"]
-	fmt.Println(remPath)
 	fmt.Println(iter)
+	b, err := ioutil.ReadAll(req.Body)
+        defer req.Body.Close()
+	var filepath string
+        err = json.Unmarshal(b, &filepath)
+        if err != nil {
+                log.Fatal(err)
+        }
+	fmt.Println(filepath)
 	//fmt.Fprint(w, "Sending all artifacts of current iteration\n")
 	// Open directory by iter num
 	// Adjust filepath based on what is requested after "iter"
