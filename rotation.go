@@ -167,13 +167,20 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			resp, err = client.Do(pReq)
 		}
 	}
-	// Copy files from /root/anvil/config/* into a newly made anvil-rotation/config/iteration/ directory
-
         newpath := filepath.Join(".", "config", caContent.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
-	exec.Command("/usr/bin/cp", "/root/anvil/config/ca.crt", "/root/anvil-rotation/config"+caContent.Iteration+"/ca.crt").Output()
-	exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".crt", "/root/anvil-rotation/config"+caContent.Iteration+"/"+caContent.Prefix+".crt").Output()
-	exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".key", "/root/anvil-rotation/config"+caContent.Iteration+"/"+caContent.Prefix+".key").Output()
+	_, err = exec.Command("/usr/bin/cp", "/root/anvil/config/ca.crt", "/root/anvil-rotation/config/"+caContent.Iteration+"/ca.crt").Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+	_, err = exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".crt", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt").Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+	_, err = exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".key", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key").Output()
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Fprint(w, "Notified Quorum\n")
 }
 
