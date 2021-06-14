@@ -34,7 +34,7 @@ func main() {
 func registerRoutes(rot_router *mux.Router) {
     rot_router.HandleFunc("/bundle/{client_name}", RetrieveBundle).Methods("GET")
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
-    rot_router.HandleFunc("/missing/{iter}", CollectAll).Methods("GET")
+    rot_router.HandleFunc("/missing/{iter}/{rem}", CollectAll).Methods("GET")
     rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
     rot_router.HandleFunc("/collectSignal", CollectSignal).Methods("POST")
     rot_router.HandleFunc("/makeCA", MakeCA).Methods("POST")
@@ -73,7 +73,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
 		//pReq, err := http.NewRequest("GET", "http://localhost:8080/missingDirs/"+pullMap.Iteration, nil)
-		fmt.Println("Making a request to ", t)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 		resp, err := client.Do(pReq)
 
@@ -96,6 +95,13 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 		fmt.Println("Made directories that were told by ", t)
 
+		//for _, f := range missMap.FPaths {
+		if len(missMap.FPaths) > 0 {
+			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration+"/"+missMap.FPaths[0], nil)
+			client.Do(pReq)
+		}
+
+
 		// For loop the files that are missing in FPaths and save them
 		// When pulling the acls.yaml file, make small edit and append to your own
 		// Move onto the next target and repeat the process from pulling missMap
@@ -104,6 +110,10 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
+	iter := mux.Vars(req)["iter"]
+	remPath := mux.Vars(req)["rem"]
+	fmt.Println(remPath)
+	fmt.Println(iter)
 	//fmt.Fprint(w, "Sending all artifacts of current iteration\n")
 	// Open directory by iter num
 	// Adjust filepath based on what is requested after "iter"
