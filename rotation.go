@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"io"
 	"path/filepath"
+	"strings"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -33,8 +34,9 @@ func main() {
 func registerRoutes(rot_router *mux.Router) {
     rot_router.HandleFunc("/bundle/{client_name}", RetrieveBundle).Methods("GET")
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
-    rot_router.HandleFunc("/missing/{iter}/{file}", CollectAll).Methods("GET")
+    rot_router.HandleFunc("/missing/{iter}", CollectAll).Methods("GET")
     rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
+    rot_router.HandleFunc("/collectSignal", CollectSignal).Methods("POST")
     rot_router.HandleFunc("/makeCA", MakeCA).Methods("POST")
     rot_router.HandleFunc("/pullCA", PullCA).Methods("POST")
     rot_router.HandleFunc("/sendCA/{iter}/{name}", SendCA).Methods("GET")
@@ -54,26 +56,102 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	// Serve the .tar.gz file within 
 }
 
+func CollectSignal(w http.ResponseWriter, req *http.Request) {
+	b, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
+	pullMap := struct {
+		Targets		[]string
+		Iteration	string
+	}{}
+	err = json.Unmarshal(b, &pullMap)
+	if err != nil {
+		log.Fatal()
+	}
+
+
+	for _, t := range pullMap.Targets {
+		client := new(http.Client)
+		//pReq, err := http.NewRequest("GET", "http://localhost:8080/missingDirs/"+pullMap.Iteration, nil)
+		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
+		resp, err := client.Do(pReq)
+
+		b, err = ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		missMap := struct {
+			Directories	[]string
+			FPaths		[]string
+		}{}
+		err = json.Unmarshal(b, &missMap)
+		if err != nil {
+			log.Fatal()
+		}
+
+		// Make the directories that are in missMap
+		for _, d := range missMap.Directories {
+			newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
+			os.MkdirAll(newpath, os.ModePerm)
+		}
+
+		// For loop the files that are missing in FPaths and save them
+		// When pulling the acls.yaml file, make small edit and append to your own
+		// Move onto the next target and repeat the process from pulling missMap
+	}
+	fmt.Fprintf(w, "RECEIVED: %v\n", missMap)
+}
+
 func CollectAll(w http.ResponseWriter, req *http.Request) {
-	//iter := mux.Vars(req)["iter"]
 	//fmt.Fprint(w, "Sending all artifacts of current iteration\n")
 	// Open directory by iter num
 	// Adjust filepath based on what is requested after "iter"
-	filepath := "test.json.example"
-	w.Header().Set("Content-Type", "application/text")
-	http.ServeFile(w, req, filepath)
+	//filepath := "test.json.example"
+	//w.Header().Set("Content-Type", "application/text")
+	//http.ServeFile(w, req, filepath)
 	//
 	// Open all Client directories and send .tar.gz files within
 		// Only send the .tar.gz files that you were responsible for generating
+	fmt.Fprintf(w, "Landed in CollectAll\n")
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
-	//iter := mux.Vars(req)["iter"]
-	fmt.Fprint(w, "Sending list of directories for recipient to create\n")
-	// Open directory by iter num
-	// Get a list of all directory names
-	// Send this list to the requester so that they can make the directories 
-	// on their end and then pull the right files
+	iter := mux.Vars(req)["iter"]
+	dirMap := struct {
+		Directories	[]string
+		FPaths		[]string
+	}{}
+
+	topLvl, err := ioutil.ReadDir("./artifacts/"+iter)
+	if err != nil {
+		log.Println(err)
+	}
+
+	for _, f := range topLvl {
+		if f.IsDir() {
+			dirMap.Directories = append(dirMap.Directories, f.Name())
+		}
+	}
+
+	searchInd := "artifacts/"+iter+"/"
+	err = filepath.Walk("./"+searchInd,
+	    func(path string, info os.FileInfo, err error) error {
+	    if err != nil {
+		return err
+	    }
+	    if !info.IsDir() {
+		    fpath := strings.Split(path, searchInd)
+		    dirMap.FPaths = append(dirMap.FPaths, fpath[1])
+		}
+	    return nil
+	})
+	if err != nil {
+	    log.Println(err)
+	}
+
+	jsonData, err := json.Marshal(dirMap)
+        if err != nil {
+                log.Fatalln("Unable to marshal JSON")
+        }
+        w.Header().Set("Content-Type", "application/json")
+        fmt.Fprintf(w, string(jsonData))
 }
 
 func MakeCA(w http.ResponseWriter, req *http.Request) {
