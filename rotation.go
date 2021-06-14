@@ -11,6 +11,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"bytes"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -34,7 +35,7 @@ func main() {
 func registerRoutes(rot_router *mux.Router) {
     rot_router.HandleFunc("/bundle/{client_name}", RetrieveBundle).Methods("GET")
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
-    rot_router.HandleFunc("/missing/{iter}/{rem}", CollectAll).Methods("GET")
+    rot_router.HandleFunc("/missing/{iter}", CollectAll).Methods("POST")
     rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
     rot_router.HandleFunc("/collectSignal", CollectSignal).Methods("POST")
     rot_router.HandleFunc("/makeCA", MakeCA).Methods("POST")
@@ -96,7 +97,12 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Made directories that were told by ", t)
 
 		for _, f := range missMap.FPaths {
-			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration+"/"+f, nil)
+			jsonData, err := json.Marshal(f)
+			if err != nil {
+				log.Fatalln("Unable to marshal JSON")
+			}
+			postVal := bytes.NewBuffer(jsonData)
+			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 			client.Do(pReq)
 		}
 
