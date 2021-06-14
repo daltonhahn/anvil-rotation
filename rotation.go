@@ -95,9 +95,8 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 		fmt.Println("Made directories that were told by ", t)
 
-		//for _, f := range missMap.FPaths {
-		if len(missMap.FPaths) > 0 {
-			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration+"/"+missMap.FPaths[0], nil)
+		for _, f := range missMap.FPaths {
+			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration+"/"+f, nil)
 			client.Do(pReq)
 		}
 
