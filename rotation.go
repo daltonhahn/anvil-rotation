@@ -74,6 +74,21 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		log.Fatal()
 	}
 
+	// First get a list of all of my files and don't pull any from this node that I already made
+	baseList := []string{}
+	searchInd := "artifacts/"+pullMap.Iteration+"/"
+        err = filepath.Walk("./"+searchInd,
+            func(path string, info os.FileInfo, err error) error {
+            if err != nil {
+                return err
+            }
+            if !info.IsDir() {
+                    fpath := strings.Split(path, searchInd)
+                    baseList = append(baseList, fpath[1])
+                }
+            return nil
+        })
+
 
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
@@ -99,32 +114,34 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 
 		for _, f := range missMap.FPaths {
-			fMess := &FPMess{FilePath: f}
-			jsonData, err := json.Marshal(fMess)
-			if err != nil {
-				log.Fatalln("Unable to marshal JSON")
-			}
-			postVal := bytes.NewBuffer(jsonData)
-			fmt.Printf("Trying to send %v to %v\n", fMess.FilePath, t)
-			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
-			resp, err := client.Do(pReq)
+			if !prevMade(f, baseList) {
+				fMess := &FPMess{FilePath: f}
+				jsonData, err := json.Marshal(fMess)
+				if err != nil {
+					log.Fatalln("Unable to marshal JSON")
+				}
+				postVal := bytes.NewBuffer(jsonData)
+				fmt.Printf("Trying to send %v to %v\n", fMess.FilePath, t)
+				pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+				resp, err := client.Do(pReq)
 
-			if f == "acls.yaml" {
-				defer resp.Body.Close()
-				CombineACLs(pullMap.Iteration, resp.Body)
-			} else {
-				out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-				if err != nil  {
-					fmt.Printf("FAILURE OPENING FILE\n")
-				}
-				defer out.Close()
-				defer resp.Body.Close()
-				if resp.StatusCode != http.StatusOK {
-					fmt.Errorf("bad status: %s", resp.Status)
-				}
-				_, err = io.Copy(out, resp.Body)
-				if err != nil  {
-					fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+				if f == "acls.yaml" {
+					defer resp.Body.Close()
+					CombineACLs(pullMap.Iteration, resp.Body)
+				} else {
+					out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+					if err != nil  {
+						fmt.Printf("FAILURE OPENING FILE\n")
+					}
+					defer out.Close()
+					defer resp.Body.Close()
+					if resp.StatusCode != http.StatusOK {
+						fmt.Errorf("bad status: %s", resp.Status)
+					}
+					_, err = io.Copy(out, resp.Body)
+					if err != nil  {
+						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+					}
 				}
 			}
 		}
@@ -132,8 +149,17 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "DONE\n")
 }
 
+func prevMade(fp string, list []string) bool {
+	for _,f := range list {
+		if fp == f {
+			return true
+		}
+	}
+	return false
+}
 
 func CombineACLs(iter string, respCont io.ReadCloser) {
+	fmt.Println("Found acls.yaml, trying to append to my existing file")
 	f, err := os.OpenFile("artifacts/"+iter+"/acls.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 	    panic(err)
@@ -145,6 +171,7 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
 	for scanner.Scan() {
 		text = append(text, scanner.Text())
 	}
+	fmt.Println("Looping through all lines and appending")
 	for ind, each_ln := range text {
 		if ind != 0 {
 			if _, err = f.WriteString(each_ln + "\n"); err != nil {
