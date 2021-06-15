@@ -11,7 +11,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
-	"bytes"
+	//"bytes"
 	"bufio"
 
 	"strconv"
@@ -113,6 +113,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
 				os.MkdirAll(newpath, os.ModePerm)
 			}
+			/*
 
 			for _, f := range missMap.FPaths {
 				if !prevMade(f, baseList) || f == "acls.yaml" {
@@ -146,6 +147,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					}
 				}
 			}
+			*/
 		}(t)
 	}
 	fmt.Fprintf(w, "DONE\n")
@@ -269,14 +271,12 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
 func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
-	fmt.Println("Trying to send file to requester")
 	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, filepath)
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
@@ -292,7 +292,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	client := new(http.Client)
 	for i:=0; i < 3; i++ {
 		if i == 0 {
-			fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
 			out, err := os.OpenFile("/root/anvil/config/ca.crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -312,7 +311,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
 		} else if i == 1 {
-			fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
 			out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -333,7 +331,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			}
 			resp, err = client.Do(pReq)
 		} else if i == 2 {
-			fmt.Println("Pulling files from leader, looking for iter: " + caContent.Iteration + " and node: " + caContent.Prefix)
 			out, err := os.OpenFile("/root/anvil/config/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")

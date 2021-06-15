@@ -78,52 +78,54 @@ func GenCA(iteration int, numQ int) {
 
 	// Make gofunc()
 	for i := 1; i < numQ+1; i++ {
-		ips, _ := net.LookupIP("server"+strconv.Itoa(i))
-		var targIP net.IP
-		if ips[0].Equal(net.ParseIP("127.0.0.1")) {
-			targIP = ips[1]
-		} else {
-			targIP = ips[0]
-		}
+		go func(i int) {
+			ips, err := net.LookupIP("server"+strconv.Itoa(i))
+			var targIP net.IP
+			if ips[0].Equal(net.ParseIP("127.0.0.1")) {
+				targIP = ips[1]
+			} else {
+				targIP = ips[0]
+			}
 
-		keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
-		pemfile, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
-		var pemkey = &pem.Block{
-			Type : "RSA PRIVATE KEY",
-			Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
-		pem.Encode(pemfile, pemkey)
-		pemfile.Close()
+			keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
+			pemfile, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
+			var pemkey = &pem.Block{
+				Type : "RSA PRIVATE KEY",
+				Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
+			pem.Encode(pemfile, pemkey)
+			pemfile.Close()
 
-		cert := &x509.Certificate{
-			SerialNumber: big.NewInt(2019),
-			Subject: pkix.Name{
-				Organization:  []string{"Anvil"},
-				Country:       []string{"US"},
-				Province:      []string{""},
-				Locality:      []string{""},
-				StreetAddress: []string{""},
-				PostalCode:    []string{""},
-			},
-			DNSNames:		[]string{"server"+strconv.Itoa(i)},
-			IPAddresses:		[]net.IP{targIP},
-			NotBefore:              time.Now(),
-			NotAfter:               time.Now().AddDate(10, 0, 0),
-			IsCA:                   true,
-			ExtKeyUsage:            []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-			KeyUsage:               x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
-			BasicConstraintsValid:  true,
-		}
+			cert := &x509.Certificate{
+				SerialNumber: big.NewInt(2019),
+				Subject: pkix.Name{
+					Organization:  []string{"Anvil"},
+					Country:       []string{"US"},
+					Province:      []string{""},
+					Locality:      []string{""},
+					StreetAddress: []string{""},
+					PostalCode:    []string{""},
+				},
+				DNSNames:		[]string{"server"+strconv.Itoa(i)},
+				IPAddresses:		[]net.IP{targIP},
+				NotBefore:              time.Now(),
+				NotAfter:               time.Now().AddDate(10, 0, 0),
+				IsCA:                   true,
+				ExtKeyUsage:            []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+				KeyUsage:               x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+				BasicConstraintsValid:  true,
+			}
 
-	        certBytes, err := x509.CreateCertificate(crand.Reader, cert, CAcert, &keyBytes.PublicKey, CAkeyBytes)
-		if err != nil {
-			log.Fatalln(err)
-		}
+			certBytes, err := x509.CreateCertificate(crand.Reader, cert, CAcert, &keyBytes.PublicKey, CAkeyBytes)
+			if err != nil {
+				log.Fatalln(err)
+			}
 
-		certPEM, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt")
-		pem.Encode(certPEM, &pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: certBytes,
-		})
+			certPEM, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt")
+			pem.Encode(certPEM, &pem.Block{
+				Type:  "CERTIFICATE",
+				Bytes: certBytes,
+			})
+		}(i)
 	}
 }
 
