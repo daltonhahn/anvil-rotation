@@ -131,7 +131,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					CombineACLs(pullMap.Iteration, resp.Body)
 					*/
 				} else {
-					out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 					if err != nil  {
 						fmt.Printf("FAILURE OPENING FILE\n")
 					}
