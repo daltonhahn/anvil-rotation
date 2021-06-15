@@ -11,7 +11,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
-	//"bytes"
+	"bytes"
 	"bufio"
 
 	"strconv"
@@ -113,7 +113,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
 				os.MkdirAll(newpath, os.ModePerm)
 			}
-			/*
 
 			for _, f := range missMap.FPaths {
 				if !prevMade(f, baseList) || f == "acls.yaml" {
@@ -147,7 +146,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					}
 				}
 			}
-			*/
 		}(t)
 	}
 	fmt.Fprintf(w, "DONE\n")
