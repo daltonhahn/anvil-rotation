@@ -131,19 +131,24 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					CombineACLs(pullMap.Iteration, resp.Body)
 					*/
 				} else {
+					/*
 					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 					if err != nil  {
 						fmt.Printf("FAILURE OPENING FILE\n")
 					}
 					defer out.Close()
+					*/
 					defer resp.Body.Close()
 					if resp.StatusCode != http.StatusOK {
 						fmt.Errorf("bad status: %s", resp.Status)
 					}
+					fmt.Printf("%v\n", string(resp.Body))
+					/*
 					_, err = io.Copy(out, resp.Body)
 					if err != nil  {
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 					}
+					*/
 				}
 			}
 		}(t)
