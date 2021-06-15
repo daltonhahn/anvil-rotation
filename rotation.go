@@ -24,6 +24,10 @@ type ACLMap struct {
         Valid	       []string
 }
 
+type FPMess struct {
+	FilePath	string
+}
+
 var testMap []ACLMap
 
 func main() {
@@ -58,7 +62,6 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Landed in CollectSignal")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
@@ -87,21 +90,21 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Fatal()
 		}
-		fmt.Println("Unmarshaled response from ", t)
 
 		// Make the directories that are in missMap
 		for _, d := range missMap.Directories {
 			newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
 			os.MkdirAll(newpath, os.ModePerm)
 		}
-		fmt.Println("Made directories that were told by ", t)
 
 		for _, f := range missMap.FPaths {
-			jsonData, err := json.Marshal(f)
+			fMess := &FPMess{FilePath: f}
+			jsonData, err := json.Marshal(fMess)
 			if err != nil {
 				log.Fatalln("Unable to marshal JSON")
 			}
 			postVal := bytes.NewBuffer(jsonData)
+			fmt.Printf("Trying to send %v to %v\n", fMess.FilePath, t)
 			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 			client.Do(pReq)
 		}
@@ -115,16 +118,17 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Landed in CollectAll")
 	iter := mux.Vars(req)["iter"]
 	fmt.Println(iter)
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
-	var filepath string
+	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
                 log.Fatal(err)
         }
-	fmt.Println(filepath)
+	fmt.Println(filepath.FilePath)
 	//fmt.Fprint(w, "Sending all artifacts of current iteration\n")
 	// Open directory by iter num
 	// Adjust filepath based on what is requested after "iter"
