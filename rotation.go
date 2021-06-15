@@ -114,7 +114,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 
 		for _, f := range missMap.FPaths {
-			if !prevMade(f, baseList) {
+			if !prevMade(f, baseList) || f == "acls.yaml" {
 				fMess := &FPMess{FilePath: f}
 				jsonData, err := json.Marshal(fMess)
 				if err != nil {
@@ -152,6 +152,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 func prevMade(fp string, list []string) bool {
 	for _,f := range list {
 		if fp == f {
+			fmt.Printf("I already have %v\n", fp)
 			return true
 		}
 	}
