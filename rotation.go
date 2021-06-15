@@ -190,7 +190,6 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("Landed in CollectAll")
 	iter := mux.Vars(req)["iter"]
-	fmt.Println(iter)
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
 	var filepath FPMess
@@ -198,7 +197,8 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-	path := iter+"/"+filepath.FilePath
+	fmt.Println(filepath.FilePath)
+	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
 }
