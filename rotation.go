@@ -74,7 +74,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		log.Fatal()
 	}
 
-	// First get a list of all of my files and don't pull any from this node that I already made
 	baseList := []string{}
 	searchInd := "artifacts/"+pullMap.Iteration+"/"
         err = filepath.Walk("./"+searchInd,
@@ -93,7 +92,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	for _, t := range pullMap.Targets {
 		go func(t string) {
 			client := new(http.Client)
-			//pReq, err := http.NewRequest("GET", "http://localhost:8080/missingDirs/"+pullMap.Iteration, nil)
 			pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 			resp, err := client.Do(pReq)
 
@@ -108,7 +106,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				log.Fatal()
 			}
 
-			// Make the directories that are in missMap
 			for _, d := range missMap.Directories {
 				newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
 				os.MkdirAll(newpath, os.ModePerm)
@@ -125,11 +122,8 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				resp, err := client.Do(pReq)
 
 				if f == "acls.yaml" {
-					fmt.Println("Doing special things because acls.yaml")
-					/*
 					defer resp.Body.Close()
 					CombineACLs(pullMap.Iteration, resp.Body)
-					*/
 				} else {
 					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 					if err != nil  {
@@ -164,19 +158,16 @@ func prevMade(fp string, list []string) bool {
 */
 
 func CombineACLs(iter string, respCont io.ReadCloser) {
-	fmt.Println("Found acls.yaml, trying to append to my existing file")
 	f, err := os.OpenFile("artifacts/"+iter+"/acls.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 	    panic(err)
 	}
-
 	scanner := bufio.NewScanner(respCont)
 	scanner.Split(bufio.ScanLines)
 	var text []string
 	for scanner.Scan() {
 		text = append(text, scanner.Text())
 	}
-	fmt.Println("Looping through all lines and appending")
 	for ind, each_ln := range text {
 		if ind != 0 {
 			if _, err = f.WriteString(each_ln + "\n"); err != nil {
@@ -188,7 +179,6 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
 }
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Landed in CollectAll")
 	iter := mux.Vars(req)["iter"]
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
@@ -197,7 +187,6 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-	fmt.Println(filepath.FilePath)
 	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
