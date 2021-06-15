@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"bytes"
+	"bufio"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -108,23 +109,56 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 			resp, err := client.Do(pReq)
 
-			out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-                        if err != nil  {
-                                fmt.Printf("FAILURE OPENING FILE\n")
-                        }
-                        defer out.Close()
-                        defer resp.Body.Close()
-                        if resp.StatusCode != http.StatusOK {
-                                fmt.Errorf("bad status: %s", resp.Status)
-                        }
-                        _, err = io.Copy(out, resp.Body)
-                        if err != nil  {
-                                fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
-                        }
+			if f == "acls.yaml" {
+				defer resp.Body.Close()
+				CombineACLs(pullMap.Iteration, resp.Body)
+			} else {
+				out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+				if err != nil  {
+					fmt.Printf("FAILURE OPENING FILE\n")
+				}
+				defer out.Close()
+				defer resp.Body.Close()
+				if resp.StatusCode != http.StatusOK {
+					fmt.Errorf("bad status: %s", resp.Status)
+				}
+				_, err = io.Copy(out, resp.Body)
+				if err != nil  {
+					fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+				}
+			}
 		}
 	}
 	fmt.Fprintf(w, "DONE\n")
 }
+
+
+func CombineACLs(iter string, respCont io.ReadCloser) {
+	f, err := os.OpenFile("artifacts/"+iter+"/acls.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+	    panic(err)
+	}
+
+	scanner := bufio.NewScanner(respCont)
+	scanner.Split(bufio.ScanLines)
+	var text []string
+	for scanner.Scan() {
+		text = append(text, scanner.Text())
+	}
+	for ind, each_ln := range text {
+		if ind != 0 {
+			if _, err = f.WriteString(each_ln + "\n"); err != nil {
+			    panic(err)
+			}
+		}
+	}
+	defer f.Close()
+}
+
+
+
+
+
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("Landed in CollectAll")
