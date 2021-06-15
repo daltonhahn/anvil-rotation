@@ -106,13 +106,22 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			postVal := bytes.NewBuffer(jsonData)
 			fmt.Printf("Trying to send %v to %v\n", fMess.FilePath, t)
 			pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
-			client.Do(pReq)
+			resp, err := client.Do(pReq)
+
+			out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+                        if err != nil  {
+                                fmt.Printf("FAILURE OPENING FILE\n")
+                        }
+                        defer out.Close()
+                        defer resp.Body.Close()
+                        if resp.StatusCode != http.StatusOK {
+                                fmt.Errorf("bad status: %s", resp.Status)
+                        }
+                        _, err = io.Copy(out, resp.Body)
+                        if err != nil  {
+                                fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+                        }
 		}
-
-
-		// For loop the files that are missing in FPaths and save them
-		// When pulling the acls.yaml file, make small edit and append to your own
-		// Move onto the next target and repeat the process from pulling missMap
 	}
 	fmt.Fprintf(w, "DONE\n")
 }
@@ -129,16 +138,9 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
                 log.Fatal(err)
         }
 	fmt.Println(filepath.FilePath)
-	//fmt.Fprint(w, "Sending all artifacts of current iteration\n")
-	// Open directory by iter num
-	// Adjust filepath based on what is requested after "iter"
-	//filepath := "test.json.example"
-	//w.Header().Set("Content-Type", "application/text")
-	//http.ServeFile(w, req, filepath)
-	//
-	// Open all Client directories and send .tar.gz files within
-		// Only send the .tar.gz files that you were responsible for generating
-	fmt.Fprintf(w, "Landed in CollectAll\n")
+	path := iter+"/"+filepath.FilePath
+	w.Header().Set("Content-Type", "application/text")
+	http.ServeFile(w, req, path)
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
