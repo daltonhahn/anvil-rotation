@@ -11,7 +11,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
-	//"bytes"
+	"bytes"
 	"bufio"
 
 	"strconv"
@@ -115,8 +115,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			}
 
 			for _, f := range missMap.FPaths {
-				fmt.Printf("Trying to pull %v from %v\n", f, t)
-				/*
 				fMess := &FPMess{FilePath: f}
 				jsonData, err := json.Marshal(fMess)
 				if err != nil {
@@ -125,7 +123,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				postVal := bytes.NewBuffer(jsonData)
 				pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 				resp, err := client.Do(pReq)
-				*/
 
 				if f == "acls.yaml" {
 					fmt.Println("Doing special things because acls.yaml")
@@ -134,8 +131,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					CombineACLs(pullMap.Iteration, resp.Body)
 					*/
 				} else {
-					fmt.Println("Normal save stuff because: ", f)
-					/*
 					out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 					if err != nil  {
 						fmt.Printf("FAILURE OPENING FILE\n")
@@ -149,7 +144,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					if err != nil  {
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 					}
-					*/
 				}
 			}
 		}(t)
