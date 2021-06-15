@@ -142,7 +142,8 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					if resp.StatusCode != http.StatusOK {
 						fmt.Errorf("bad status: %s", resp.Status)
 					}
-					fmt.Printf("%v\n", string(resp.Body))
+					body, _ := ioutil.ReadAll(resp.Body)
+					fmt.Printf("%v\n", string(body))
 					/*
 					_, err = io.Copy(out, resp.Body)
 					if err != nil  {
