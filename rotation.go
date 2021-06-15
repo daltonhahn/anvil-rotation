@@ -121,7 +121,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					log.Fatalln("Unable to marshal JSON")
 				}
 				postVal := bytes.NewBuffer(jsonData)
-				pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+				pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 				resp, err := client.Do(pReq)
 
 				if f == "acls.yaml" {
@@ -131,25 +131,19 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					CombineACLs(pullMap.Iteration, resp.Body)
 					*/
 				} else {
-					/*
 					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 					if err != nil  {
 						fmt.Printf("FAILURE OPENING FILE\n")
 					}
 					defer out.Close()
-					*/
 					defer resp.Body.Close()
 					if resp.StatusCode != http.StatusOK {
 						fmt.Errorf("bad status: %s", resp.Status)
 					}
-					body, _ := ioutil.ReadAll(resp.Body)
-					fmt.Printf("%v\n", string(body))
-					/*
 					_, err = io.Copy(out, resp.Body)
 					if err != nil  {
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 					}
-					*/
 				}
 			}
 		}(t)
@@ -193,11 +187,6 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
 	defer f.Close()
 }
 
-
-
-
-
-
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("Landed in CollectAll")
 	iter := mux.Vars(req)["iter"]
@@ -209,7 +198,6 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-	fmt.Println(filepath.FilePath)
 	path := iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
