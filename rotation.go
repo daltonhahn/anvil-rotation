@@ -11,7 +11,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
-	"bytes"
+	//"bytes"
 	"bufio"
 
 	"strconv"
@@ -115,35 +115,41 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			}
 
 			for _, f := range missMap.FPaths {
-				if !prevMade(f, baseList) || f == "acls.yaml" {
-					fMess := &FPMess{FilePath: f}
-					jsonData, err := json.Marshal(fMess)
-					if err != nil {
-						log.Fatalln("Unable to marshal JSON")
-					}
-					postVal := bytes.NewBuffer(jsonData)
-					fmt.Printf("Trying to send %v to %v\n", fMess.FilePath, t)
-					pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
-					resp, err := client.Do(pReq)
+				fmt.Printf("Trying to pull %v from %v\n", f, t)
+				/*
+				fMess := &FPMess{FilePath: f}
+				jsonData, err := json.Marshal(fMess)
+				if err != nil {
+					log.Fatalln("Unable to marshal JSON")
+				}
+				postVal := bytes.NewBuffer(jsonData)
+				pReq, err = http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+				resp, err := client.Do(pReq)
+				*/
 
-					if f == "acls.yaml" {
-						defer resp.Body.Close()
-						CombineACLs(pullMap.Iteration, resp.Body)
-					} else {
-						out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-						if err != nil  {
-							fmt.Printf("FAILURE OPENING FILE\n")
-						}
-						defer out.Close()
-						defer resp.Body.Close()
-						if resp.StatusCode != http.StatusOK {
-							fmt.Errorf("bad status: %s", resp.Status)
-						}
-						_, err = io.Copy(out, resp.Body)
-						if err != nil  {
-							fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
-						}
+				if f == "acls.yaml" {
+					fmt.Println("Doing special things because acls.yaml")
+					/*
+					defer resp.Body.Close()
+					CombineACLs(pullMap.Iteration, resp.Body)
+					*/
+				} else {
+					fmt.Println("Normal save stuff because: ", f)
+					/*
+					out, err := os.OpenFile("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+					if err != nil  {
+						fmt.Printf("FAILURE OPENING FILE\n")
 					}
+					defer out.Close()
+					defer resp.Body.Close()
+					if resp.StatusCode != http.StatusOK {
+						fmt.Errorf("bad status: %s", resp.Status)
+					}
+					_, err = io.Copy(out, resp.Body)
+					if err != nil  {
+						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+					}
+					*/
 				}
 			}
 		}(t)
@@ -151,6 +157,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "DONE\n")
 }
 
+/*
 func prevMade(fp string, list []string) bool {
 	for _,f := range list {
 		if fp == f {
@@ -160,6 +167,7 @@ func prevMade(fp string, list []string) bool {
 	}
 	return false
 }
+*/
 
 func CombineACLs(iter string, respCont io.ReadCloser) {
 	fmt.Println("Found acls.yaml, trying to append to my existing file")
