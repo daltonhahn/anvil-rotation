@@ -291,6 +291,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
 	filepath := "/root/anvil-rotation/config/"+ca_iter+"/"+ca_target
+	fmt.Println("Trying to send: ", filepath)
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, filepath)
 }
@@ -332,11 +333,13 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
 		} else if i == 1 {
+			fmt.Printf("Opening file: /root/anvil-rotation/config/%v/%v.crt\n", caContent.Iteration, caContent.Prefix)
 			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
 			defer out.Close()
+			fmt.Printf("Making request: http://%v/outbound/rotation/service/rotation/sendCA/%v/%v.crt\n", leaderIP, caContent.Iteration, caContent.Prefix)
 			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix+".crt", nil)
 			resp, err := client.Do(pReq)
 			if err != nil {
@@ -346,6 +349,8 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
+			cont, err := ioutil.ReadAll(resp.Body)
+			fmt.Printf("%v\n", string(cont))
 			_, err = io.Copy(out, resp.Body)
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
