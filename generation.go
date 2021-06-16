@@ -2,7 +2,7 @@ package main
 
 import (
         "os"
-	//"os/exec"
+	"os/exec"
 	"net"
         "strconv"
         crand "crypto/rand"
@@ -203,6 +203,8 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string)
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
+	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt", "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt").Output()
+	time.Sleep(2*time.Second)
 
 	<-semaphore
 	defer wg.Done()
