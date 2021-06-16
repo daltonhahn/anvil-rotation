@@ -38,7 +38,7 @@ func main() {
 }
 
 func registerRoutes(rot_router *mux.Router) {
-    rot_router.HandleFunc("/bundle", RetrieveBundle).Methods("POST")
+    rot_router.HandleFunc("/bundle/{iter}", RetrieveBundle).Methods("POST")
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
     rot_router.HandleFunc("/missing/{iter}", CollectAll).Methods("POST")
     rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
