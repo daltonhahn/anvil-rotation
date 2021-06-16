@@ -45,7 +45,7 @@ func registerRoutes(rot_router *mux.Router) {
     rot_router.HandleFunc("/collectSignal", CollectSignal).Methods("POST")
     rot_router.HandleFunc("/makeCA", MakeCA).Methods("POST")
     rot_router.HandleFunc("/pullCA", PullCA).Methods("POST")
-    rot_router.HandleFunc("/sendCA/{iter}/{name}", SendCA).Methods("GET")
+    rot_router.HandleFunc("/sendCA/{iter}", SendCA).Methods("POST")
     rot_router.HandleFunc("/", Index).Methods("GET")
 }
 
@@ -288,12 +288,26 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func SendCA(w http.ResponseWriter, req *http.Request) {
+        iter := mux.Vars(req)["iter"]
+        b, err := ioutil.ReadAll(req.Body)
+        defer req.Body.Close()
+        var filepath FPMess
+        err = json.Unmarshal(b, &filepath)
+        if err != nil {
+                log.Fatal(err)
+        }
+        path := "/root/anvil-rotation/config/"+iter+"/"+filepath.FilePath
+        w.Header().Set("Content-Type", "application/text")
+        http.ServeFile(w, req, path)
+
+	/*
 	ca_target := mux.Vars(req)["name"]
 	ca_iter := mux.Vars(req)["iter"]
 	filepath := "./config/"+ca_iter+"/"+ca_target
 	fmt.Println("Trying to send: ", filepath)
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, filepath)
+	*/
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
@@ -319,7 +333,15 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
 			defer out.Close()
-			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/ca.crt", nil)
+
+			fMess := &FPMess{FilePath: "ca.crt"}
+			jsonData, err := json.Marshal(fMess)
+			if err != nil {
+				log.Fatalln("Unable to marshal JSON")
+			}
+			postVal := bytes.NewBuffer(jsonData)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+
 			resp, err := client.Do(pReq)
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
@@ -341,8 +363,16 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			defer out.Close()
 			fmt.Printf("Making request: http://%v/outbound/rotation/service/rotation/sendCA/%v/%v.crt\n", leaderIP, caContent.Iteration, caContent.Prefix)
 			//pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix+".crt", nil)
-			hname, _ := os.Hostname()
-			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+hname+".crt", nil)
+
+
+			fMess := &FPMess{FilePath: caContent.Prefix+".crt"}
+                        jsonData, err := json.Marshal(fMess)
+                        if err != nil {
+                                log.Fatalln("Unable to marshal JSON")
+                        }
+                        postVal := bytes.NewBuffer(jsonData)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+
 			resp, err := client.Do(pReq)
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
@@ -364,7 +394,15 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
 			defer out.Close()
-			pReq, err := http.NewRequest("GET", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration+"/"+caContent.Prefix+".key", nil)
+
+			fMess := &FPMess{FilePath: caContent.Prefix+".key"}
+                        jsonData, err := json.Marshal(fMess)
+                        if err != nil {
+                                log.Fatalln("Unable to marshal JSON")
+                        }
+                        postVal := bytes.NewBuffer(jsonData)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+
 			resp, err := client.Do(pReq)
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
