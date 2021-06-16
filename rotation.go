@@ -95,6 +95,8 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         })
 
 
+	var wg sync.WaitGroup
+        wg.Add(numQ)
 	for _, t := range pullMap.Targets {
 		go func(t string) {
 			client := new(http.Client)
@@ -147,8 +149,10 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 				}
 			}
+			wg.Done()
 		}(t)
 	}
+	wg.Wait()
 
         newpath := filepath.Join("/root/anvil/", "config/acls", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
@@ -167,7 +171,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/acls.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
+	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
 	fmt.Fprintf(w, "DONE\n")
 }
 
