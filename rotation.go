@@ -12,17 +12,17 @@ import (
 	"path/filepath"
 	"strings"
 	"bytes"
-	"bufio"
 
 	"strconv"
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v2"
 )
 
 type ACLMap struct {
-        TokName         string
-        Node            string
-        Svc             string
-        Valid	       []string
+	TokName         string		`yaml:"name,omitempty"`
+        Node            string		`yaml:"sname,omitempty"`
+        Svc             string		`yaml:"val,omitempty"`
+        Valid	       []string		`yaml:"services,omitempty"`
 }
 
 type FPMess struct {
@@ -145,38 +145,46 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "DONE\n")
 }
 
-/*
-func prevMade(fp string, list []string) bool {
-	for _,f := range list {
-		if fp == f {
-			fmt.Printf("I already have %v\n", fp)
-			return true
-		}
-	}
-	return false
-}
-*/
-
 func CombineACLs(iter string, respCont io.ReadCloser) {
-	f, err := os.OpenFile("artifacts/"+iter+"/acls.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := ioutil.ReadFile("artifacts/"+iter+"/acls.yaml")
 	if err != nil {
 	    panic(err)
 	}
-	scanner := bufio.NewScanner(respCont)
-	scanner.Split(bufio.ScanLines)
-	var text []string
-	for scanner.Scan() {
-		text = append(text, scanner.Text())
-	}
-	for ind, each_ln := range text {
-		if ind != 0 {
-			if _, err = f.WriteString(each_ln + "\n"); err != nil {
-			    panic(err)
-			}
+	var aclList []ACLMap
+        err = yaml.Unmarshal(f, &aclList)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+	var compList []ACLMap
+        f2, err := ioutil.ReadAll(respCont)
+        if err != nil {
+            panic(err)
+        }
+        err = yaml.Unmarshal(f2, &compList)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+
+	retList := make([]ACLMap, len(aclList))
+	copy(retList, aclList)
+	for _, ele := range compList {
+		if !valInList(ele, aclList) {
+			retList = append(retList, ele)
 		}
 	}
-	defer f.Close()
+
+	fmt.Printf("%v\n", retList)
 }
+
+func valInList(a ACLMap, list []ACLMap) bool {
+    for _, ele := range list {
+        if ele.TokName == a.TokName {
+            return true
+        }
+    }
+    return false
+}
+
 
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]

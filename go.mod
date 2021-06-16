@@ -4,5 +4,5 @@ go 1.15
 
 require (
 	github.com/gorilla/mux v1.8.0
-	github.com/mholt/archiver/v3 v3.5.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 )
