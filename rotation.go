@@ -38,7 +38,7 @@ func main() {
 }
 
 func registerRoutes(rot_router *mux.Router) {
-    rot_router.HandleFunc("/bundle/{client_name}", RetrieveBundle).Methods("GET")
+    rot_router.HandleFunc("/bundle", RetrieveBundle).Methods("POST")
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
     rot_router.HandleFunc("/missing/{iter}", CollectAll).Methods("POST")
     rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
@@ -54,12 +54,17 @@ func Index(w http.ResponseWriter, req *http.Request) {
 }
 
 func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
-	bundle_target := mux.Vars(req)["client_name"]
-	fmt.Fprint(w, "Bundle for " + bundle_target + " selected.\n")
-	// Find the highest iteration num so far
-	// Open this directory
-	// Open the Client name directory
-	// Serve the .tar.gz file within 
+	iter := mux.Vars(req)["iter"]
+	b, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
+	var filepath FPMess
+        err = json.Unmarshal(b, &filepath)
+        if err != nil {
+                log.Fatal(err)
+        }
+	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
+	w.Header().Set("Content-Type", "application/text")
+	http.ServeFile(w, req, path)
 }
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
@@ -172,8 +177,14 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
 			retList = append(retList, ele)
 		}
 	}
-
-	fmt.Printf("%v\n", retList)
+	yamlOut,err := yaml.Marshal(&retList)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = ioutil.WriteFile("artifacts/"+iter+"/acls.yaml", yamlOut, 0)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func valInList(a ACLMap, list []ACLMap) bool {
