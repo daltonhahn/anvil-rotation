@@ -13,6 +13,7 @@ import (
 	"strings"
 	"bytes"
 	"time"
+	"sync"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -96,7 +97,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 
 	var wg sync.WaitGroup
-        wg.Add(numQ)
+        wg.Add(len(pullMap.Targets))
 	for _, t := range pullMap.Targets {
 		go func(t string) {
 			client := new(http.Client)
