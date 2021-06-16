@@ -77,6 +77,8 @@ func GenCA(iteration int, numQ int) {
 	})
 
 	// Make gofunc()
+	var wg sync.WaitGroup
+	wg.Add(numQ+1)
 	for i := 1; i < numQ+1; i++ {
 		go func(i int) {
 			ips, err := net.LookupIP("server"+strconv.Itoa(i))
@@ -125,8 +127,10 @@ func GenCA(iteration int, numQ int) {
 				Type:  "CERTIFICATE",
 				Bytes: certBytes,
 			})
+			wg.Done()
 		}(i)
 	}
+	wg.Wait()
 }
 
 func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string) {
