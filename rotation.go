@@ -150,22 +150,24 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}(t)
 	}
 
-        newpath := filepath.Join("/root/anvil/", "config", pullMap.Iteration)
+        newpath := filepath.Join("/root/anvil/", "config/acls", pullMap.Iteration)
+        os.MkdirAll(newpath, os.ModePerm)
+        newpath = filepath.Join("/root/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
-	_, err = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/ca.crt", "/root/anvil/config/"+pullMap.Iteration+"/ca.crt").Output()
+	_, err = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/ca.crt", "/root/anvil/config/certs/"+pullMap.Iteration+"/ca.crt").Output()
 	if err != nil {
 		fmt.Println(err)
 	}
-	_, err = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/root/anvil/config/"+pullMap.Iteration+"/"+hname+".crt").Output()
+	_, err = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt").Output()
 	if err != nil {
 		fmt.Println(err)
 	}
-	_, err = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/"+pullMap.Iteration+"/"+hname+".key").Output()
+	_, err = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
 	if err != nil {
 		fmt.Println(err)
 	}
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/"+pullMap.Iteration+"/acl.yaml").Output()
+	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
 	fmt.Fprintf(w, "DONE\n")
 }
 
