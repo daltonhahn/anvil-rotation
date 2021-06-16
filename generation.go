@@ -78,7 +78,7 @@ func GenCA(iteration int, numQ int) {
 
 	// Make gofunc()
 	var wg sync.WaitGroup
-	wg.Add(numQ+1)
+	wg.Add(numQ)
 	for i := 1; i < numQ+1; i++ {
 		go func(i int) {
 			ips, err := net.LookupIP("server"+strconv.Itoa(i))
