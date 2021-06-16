@@ -163,7 +163,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		fmt.Println(err)
 	}
 	fmt.Println("COPYING: /root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml")
-	exec.Command("/usr/bin/cp", "/root/anvil/config/acl.yaml", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml").Output()
+	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acl.yaml").Output()
 	fmt.Fprintf(w, "DONE\n")
 }
 
@@ -372,20 +372,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			}
 			resp, err = client.Do(pReq)
 		}
-	}
-        newpath = filepath.Join(".", "config", caContent.Iteration)
-        os.MkdirAll(newpath, os.ModePerm)
-	_, err = exec.Command("/usr/bin/cp", "/root/anvil/config/ca.crt", "/root/anvil-rotation/config/"+caContent.Iteration+"/ca.crt").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	_, err = exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".crt", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	_, err = exec.Command("/usr/bin/cp", "/root/anvil/config/"+caContent.Prefix+".key", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key").Output()
-	if err != nil {
-		fmt.Println(err)
 	}
 	fmt.Fprint(w, "Notified Quorum\n")
 }
