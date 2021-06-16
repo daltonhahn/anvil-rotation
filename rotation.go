@@ -167,7 +167,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
+	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/acls.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
 	fmt.Fprintf(w, "DONE\n")
 }
 
