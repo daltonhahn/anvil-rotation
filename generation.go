@@ -39,7 +39,7 @@ func StringWithCharset(length int, charset string) string {
 func GenCA(iteration int, numQ int) {
         newpath := filepath.Join(".", "config", strconv.Itoa(iteration))
         os.MkdirAll(newpath, os.ModePerm)
-        CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
+        CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 1024)
         pemfile, _ := os.Create("config/"+strconv.Itoa(iteration)+"/ca.key")
         var pemkey = &pem.Block{
                 Type : "RSA PRIVATE KEY",
@@ -89,7 +89,7 @@ func GenCA(iteration int, numQ int) {
 				targIP = ips[0]
 			}
 
-			keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
+			keyBytes, _ := rsa.GenerateKey(crand.Reader, 1024)
 			pemfile, _ := os.Create("config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
 			var pemkey = &pem.Block{
 				Type : "RSA PRIVATE KEY",
@@ -159,7 +159,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string)
 	if err != nil {
 		panic(err)
 	}
-        keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
+        keyBytes, _ := rsa.GenerateKey(crand.Reader, 1024)
         pemfile, _ := os.Create("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
         var pemkey = &pem.Block{
 		Type : "RSA PRIVATE KEY",
