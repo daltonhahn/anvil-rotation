@@ -14,7 +14,6 @@ import (
 	"bytes"
 	"time"
 	"sync"
-	"net"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -319,10 +318,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 	}
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
-	leaderAddr, err := net.LookupAddr(leaderIP)
-	if err != nil {
-		fmt.Println("Lookup failed")
-	}
 	client := new(http.Client)
         newpath := filepath.Join(".", "config", caContent.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
@@ -340,7 +335,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				log.Fatalln("Unable to marshal JSON")
 			}
 			postVal := bytes.NewBuffer(jsonData)
-			pReq, err := http.NewRequest("POST", "http://"+leaderAddr[0]+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			resp, err := client.Do(pReq)
 			if err != nil {
@@ -367,7 +362,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                                 log.Fatalln("Unable to marshal JSON")
                         }
                         postVal := bytes.NewBuffer(jsonData)
-			pReq, err := http.NewRequest("POST", "http://"+leaderAddr[0]+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			resp, err := client.Do(pReq)
 			if err != nil {
@@ -395,7 +390,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                                 log.Fatalln("Unable to marshal JSON")
                         }
                         postVal := bytes.NewBuffer(jsonData)
-			pReq, err := http.NewRequest("POST", "http://"+leaderAddr[0]+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			resp, err := client.Do(pReq)
 			if err != nil {
