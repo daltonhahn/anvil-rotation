@@ -209,8 +209,6 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		Bytes: certBytes,
 	})
 
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt",
-		"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt").Output()
 	for _, ele := range quorumMems {
 		exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+ele+".crt",
 			"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+ele+".crt").Output()
