@@ -2,7 +2,7 @@ package main
 
 import (
         "os"
-	"os/exec"
+	//"os/exec"
 	"net"
         "strconv"
         crand "crypto/rand"
@@ -60,6 +60,7 @@ func GenCA(iteration int, numQ int) {
                 NotBefore:              time.Now(),
                 NotAfter:               time.Now().AddDate(10, 0, 0),
                 IsCA:                   true,
+		MaxPathLen:             2,
                 ExtKeyUsage:            []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
                 KeyUsage:               x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
                 BasicConstraintsValid:  true,
@@ -112,6 +113,8 @@ func GenCA(iteration int, numQ int) {
 				NotBefore:              time.Now(),
 				NotAfter:               time.Now().AddDate(10, 0, 0),
 				IsCA:                   true,
+				MaxPathLenZero:         false,
+				MaxPathLen:             1,
 				ExtKeyUsage:            []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 				KeyUsage:               x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 				BasicConstraintsValid:  true,
@@ -187,6 +190,8 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string)
 		DNSNames:     []string{nodeName},
 		IPAddresses:  []net.IP{targIP},
 		NotBefore:    time.Now(),
+		IsCA:	      false,
+		MaxPathLenZero: true,
 		NotAfter:     time.Now().AddDate(10, 0, 0),
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
@@ -203,7 +208,24 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string)
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt", "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt").Output()
+
+	//exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt", "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt").Output()
+	//time.Sleep(2*time.Second)
+	caCont, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/ca.crt")
+        if err != nil {
+                panic(err)
+        }
+
+        f, err := os.OpenFile("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+        if err != nil {
+                log.Fatal(err)
+        }
+	fileOut := string(caPublicKeyFile) + string(caCont)
+        _,err = f.Write([]byte(fileOut))
+        if err != nil {
+                log.Println(err)
+        }
+        defer f.Close()
 	time.Sleep(2*time.Second)
 
 	<-semaphore
