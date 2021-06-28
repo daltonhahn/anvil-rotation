@@ -2,7 +2,7 @@ package main
 
 import (
         "os"
-	//"os/exec"
+	"os/exec"
 	"net"
         "strconv"
         crand "crypto/rand"
@@ -136,7 +136,7 @@ func GenCA(iteration int, numQ int) {
 	wg.Wait()
 }
 
-func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string) {
+func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string, quorumMems []string) {
         semaphore <- struct{}{}
 	caPublicKeyFile, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/"+prefix+".crt")
 	if err != nil {
@@ -209,23 +209,12 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string)
 		Bytes: certBytes,
 	})
 
-	//exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt", "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt").Output()
-	//time.Sleep(2*time.Second)
-	caCont, err := ioutil.ReadFile("config/"+strconv.Itoa(iteration)+"/ca.crt")
-        if err != nil {
-                panic(err)
-        }
-
-        f, err := os.OpenFile("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-        if err != nil {
-                log.Fatal(err)
-        }
-	fileOut := string(caPublicKeyFile) + string(caCont)
-        _,err = f.Write([]byte(fileOut))
-        if err != nil {
-                log.Println(err)
-        }
-        defer f.Close()
+	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt",
+		"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/ca.crt").Output()
+	for _, ele := range quorumMems {
+		exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+ele+".crt",
+			"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+ele+".crt").Output()
+	}
 	time.Sleep(2*time.Second)
 
 	<-semaphore

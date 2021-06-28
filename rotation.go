@@ -311,6 +311,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         caContent := struct {
                 Iteration	string
                 Prefix		string
+		QuorumMems	[]string
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
@@ -407,6 +408,35 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			resp, err = client.Do(pReq)
 		}
 	}
+	for _, ele := range caContent.QuorumMems {
+		out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil  {
+			fmt.Printf("FAILURE OPENING FILE\n")
+		}
+		defer out.Close()
+
+		fMess := &FPMess{FilePath: ele+".crt"}
+		jsonData, err := json.Marshal(fMess)
+		if err != nil {
+			log.Fatalln("Unable to marshal JSON")
+		}
+		postVal := bytes.NewBuffer(jsonData)
+		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+
+		resp, err := client.Do(pReq)
+		if err != nil {
+			fmt.Printf("FAILURE RETRIEVING FILE\n")
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			fmt.Errorf("bad status: %s", resp.Status)
+		}
+		_, err = io.Copy(out, resp.Body)
+		if err != nil  {
+			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		}
+		resp, err = client.Do(pReq)
+	}
 	fmt.Fprint(w, "Notified Quorum\n")
 }
 
@@ -415,6 +445,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	assignmentList := struct {
+		Quorum		[]string
 		Nodes		[]string
 		SvcMap		[]ACLMap
 		Gossip		bool
@@ -430,7 +461,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	if (assignmentList.Gossip == true) {
 		GenerateUDPKey(assignmentList.Iteration)
 	}
-	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration, assignmentList.Prefix)
+	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration, assignmentList.Prefix, assignmentList.Quorum)
 	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
 	fmt.Fprint(w, "200 OK \r\n")
 }
