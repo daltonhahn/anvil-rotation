@@ -75,6 +75,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	pullMap := struct {
 		Targets		[]string
 		Iteration	string
+		QuorumMems	[]string
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
@@ -168,8 +169,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/root/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key").Output()
 	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
 
-	fmt.Printf("----- %v -----\n", pullMap.Targets)
-	for _, ele := range pullMap.Targets {
+	for _, ele := range pullMap.QuorumMems {
 		exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
 			"/root/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt").Output()
 	}
