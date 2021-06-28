@@ -167,6 +167,11 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
 	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/root/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key").Output()
 	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
+
+	for _, ele := range pullMap.Targets {
+		exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
+			"/root/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt").Output()
+	}
 	fmt.Fprintf(w, "DONE\n")
 }
 
