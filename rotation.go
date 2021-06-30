@@ -325,7 +325,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
-        newpath := filepath.Join(".", "config", caContent.Iteration)
+        newpath := filepath.Join("/root/anvil-rotation/", "config", caContent.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	for i:=0; i < 2; i++ {
 		if i == 0 {
