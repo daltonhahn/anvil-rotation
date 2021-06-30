@@ -117,7 +117,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			}
 
 			for _, d := range missMap.Directories {
-				newpath := filepath.Join(".", "artifacts", pullMap.Iteration, d)
+				newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
 				os.MkdirAll(newpath, os.ModePerm)
 			}
 
