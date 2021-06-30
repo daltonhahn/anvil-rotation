@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
         "os"
 	"os/exec"
 	"net"
@@ -171,6 +172,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
         pemfile.Close()
 
 	ips, _ := net.LookupIP(nodeName)
+	fmt.Printf("FOUND THESE IPS: %v\n", ips)
 	var targIP net.IP
 	if ips[0].Equal(net.ParseIP("127.0.0.1")) {
 		targIP = ips[1]
