@@ -176,7 +176,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 }
 
 func CombineACLs(iter string, respCont io.ReadCloser) {
-	f, err := ioutil.ReadFile("artifacts/"+iter+"/acls.yaml")
+	f, err := ioutil.ReadFile("/root/anvil-rotation/artifacts/"+iter+"/acls.yaml")
 	if err != nil {
 	    panic(err)
 	}
@@ -206,7 +206,7 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = ioutil.WriteFile("artifacts/"+iter+"/acls.yaml", yamlOut, 0)
+	err = ioutil.WriteFile("/root/anvil-rotation/artifacts/"+iter+"/acls.yaml", yamlOut, 0)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -243,7 +243,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 		FPaths		[]string
 	}{}
 
-	topLvl, err := ioutil.ReadDir("./artifacts/"+iter)
+	topLvl, err := ioutil.ReadDir("/root/anvil-rotation/artifacts/"+iter)
 	if err != nil {
 		log.Println(err)
 	}
@@ -254,7 +254,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	searchInd := "artifacts/"+iter+"/"
+	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
 	err = filepath.Walk("./"+searchInd,
 	    func(path string, info os.FileInfo, err error) error {
 	    if err != nil {

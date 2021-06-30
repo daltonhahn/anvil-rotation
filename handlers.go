@@ -11,7 +11,7 @@ import (
 )
 
 func CreateDirectories(iteration int) {
-	newpath := filepath.Join(".", "artifacts", strconv.Itoa(iteration))
+	newpath := filepath.Join("/root/anvil-rotation/", "artifacts", strconv.Itoa(iteration))
 	os.MkdirAll(newpath, os.ModePerm)
 }
 
@@ -21,7 +21,7 @@ func CreateCAInfra(iteration int, numQ int) {
 
 func GenerateUDPKey(iteration int) {
 	udpKey := (StringWithCharset(32, charset) + "\n")
-	fileName := "artifacts/"+strconv.Itoa(iteration)+"/gossip.key"
+	fileName := "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/gossip.key"
 	gossKeyFile, err := os.Create(fileName)
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func GenerateUDPKey(iteration int) {
 func GenerateTLSArtifacts(nodeList []string, iteration int, prefix string, quorumMems []string) {
 	//start := time.Now()
 	var wg sync.WaitGroup
-	newpath := filepath.Join(".", "artifacts", strconv.Itoa(iteration))
+	newpath := filepath.Join("/root/anvil-rotation/", "artifacts", strconv.Itoa(iteration))
 	for _, ele := range nodeList {
 		nodePath := filepath.Join(newpath, ele)
 		os.MkdirAll(nodePath, os.ModePerm)
@@ -61,7 +61,7 @@ func GenerateTLSArtifacts(nodeList []string, iteration int, prefix string, quoru
 }
 
 func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {
-	fileName := "artifacts/"+strconv.Itoa(iteration)+"/acls.yaml"
+	fileName := "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml"
         ACLFile, err := os.Create(fileName)
         if err != nil {
                 panic(err)
@@ -78,7 +78,7 @@ func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {
 		for _,sname := range ele.Valid {
 			fullACLs.WriteString("    - " + sname + "\n")
 		}
-		ACLpath := "artifacts/"+strconv.Itoa(iteration)+"/"+ ele.Node
+		ACLpath := "/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+ ele.Node
 		if _, err := os.Stat(ACLpath); os.IsNotExist(err) {
 			err := os.MkdirAll(ACLpath, os.ModePerm)
 			if err != nil {

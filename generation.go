@@ -163,7 +163,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		panic(err)
 	}
         keyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
-        pemfile, _ := os.Create("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
+        pemfile, _ := os.Create("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
         var pemkey = &pem.Block{
 		Type : "RSA PRIVATE KEY",
 		Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
@@ -203,7 +203,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		log.Fatalln(err)
 	}
 
-	certPEM, _ := os.Create("artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt")
+	certPEM, _ := os.Create("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt")
 	pem.Encode(certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
