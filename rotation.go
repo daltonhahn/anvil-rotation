@@ -255,7 +255,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	}
 
 	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
-	err = filepath.Walk("./"+searchInd,
+	err = filepath.Walk(searchInd,
 	    func(path string, info os.FileInfo, err error) error {
 	    if err != nil {
 		return err
