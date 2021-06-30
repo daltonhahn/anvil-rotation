@@ -84,7 +84,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 	baseList := []string{}
 	searchInd := "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"
-        err = filepath.Walk("./"+searchInd,
+        err = filepath.Walk(searchInd,
             func(path string, info os.FileInfo, err error) error {
             if err != nil {
                 return err
