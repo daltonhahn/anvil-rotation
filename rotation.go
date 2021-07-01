@@ -145,7 +145,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					if err != nil  {
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 					}
-					out.Close()
+					defer out.Close()
 
 				}
 			}
@@ -379,7 +379,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
-			out.Close()
+			defer out.Close()
 			fmt.Println(" --- Done with cert pull")
 		} else if i == 1 {
 			fmt.Println(" --- Pulling my key")
@@ -408,7 +408,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
-			out.Close()
+			defer out.Close()
 			fmt.Println(" --- Done pulling my key")
 		}
 	}
@@ -441,7 +441,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil  {
 			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
-		out.Close()
+		defer out.Close()
 		fmt.Printf(" --- Done pulling %v cert\n", ele)
 	}
 	fmt.Fprint(w, "Notified Quorum\n")
