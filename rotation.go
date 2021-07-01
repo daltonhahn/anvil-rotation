@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"bytes"
-	"time"
 	"sync"
 
 	"strconv"
@@ -163,14 +162,39 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         newpath = filepath.Join("/root/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt").Output()
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/root/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key").Output()
-	exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
+	cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
+	err = cmd.Start()
+	if err != nil {
+		fmt.Printf("Failed to use cp to copy file")
+	}
+	cmd.Wait()
+	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
+	err = cmd.Start()
+	if err != nil {
+		fmt.Printf("Failed to use cp to copy file")
+	}
+	cmd.Wait()
+	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/root/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
+	err = cmd.Start()
+	if err != nil {
+		fmt.Printf("Failed to use cp to copy file")
+	}
+	cmd.Wait()
+	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
+	err = cmd.Start()
+	if err != nil {
+		fmt.Printf("Failed to use cp to copy file")
+	}
+	cmd.Wait()
 
 	for _, ele := range pullMap.QuorumMems {
-		exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
-			"/root/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt").Output()
+		cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
+			"/root/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt")
+		err = cmd.Start()
+		if err != nil {
+			fmt.Printf("Failed to use cp to copy file")
+		}
+		cmd.Wait()
 	}
 	fmt.Fprintf(w, "DONE\n")
 }
@@ -292,7 +316,6 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
 	iter, _ := strconv.Atoi(caContent.Iteration)
 	numQ, _ := strconv.Atoi(caContent.QuorumMems)
 	CreateCAInfra(iter, numQ)
-	time.Sleep(8*time.Second)
 	fmt.Fprint(w, "OK\n")
 }
 

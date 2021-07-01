@@ -76,6 +76,7 @@ func GenCA(iteration int, numQ int) {
                 Type:  "CERTIFICATE",
                 Bytes: certBytes,
 	})
+	certPEM.Close()
 
 	// Make gofunc()
 	var wg sync.WaitGroup
@@ -130,6 +131,7 @@ func GenCA(iteration int, numQ int) {
 				Type:  "CERTIFICATE",
 				Bytes: certBytes,
 			})
+			certPEM.Close()
 			wg.Done()
 		}(i)
 	}
@@ -208,10 +210,16 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
+	certPEM.Close()
 
 	for _, ele := range quorumMems {
-		exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+ele+".crt",
-			"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+ele+".crt").Output()
+		cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+ele+".crt",
+			"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+ele+".crt")
+		err := cmd.Start()
+		if err != nil {
+			log.Println(err)
+		}
+		cmd.Wait()
 	}
 	time.Sleep(2*time.Second)
 
