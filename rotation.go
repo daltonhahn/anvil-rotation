@@ -141,11 +141,11 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					if err != nil  {
 						fmt.Printf("FAILURE OPENING FILE\n")
 					}
-					out.Close()
 					_, err = io.Copy(out, resp.Body)
 					if err != nil  {
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 					}
+					out.Close()
 
 				}
 			}
@@ -358,7 +358,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
-			out.Close()
 
 			fMess := &FPMess{FilePath: caContent.Prefix+".crt"}
                         jsonData, err := json.Marshal(fMess)
@@ -380,6 +379,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
+			out.Close()
 			fmt.Println(" --- Done with cert pull")
 		} else if i == 1 {
 			fmt.Println(" --- Pulling my key")
@@ -387,7 +387,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
-			out.Close()
 
 			fMess := &FPMess{FilePath: caContent.Prefix+".key"}
                         jsonData, err := json.Marshal(fMess)
@@ -409,6 +408,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
+			out.Close()
 			fmt.Println(" --- Done pulling my key")
 		}
 	}
@@ -420,7 +420,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil  {
 			fmt.Printf("FAILURE OPENING FILE\n")
 		}
-		out.Close()
 
 		fMess := &FPMess{FilePath: ele+".crt"}
 		jsonData, err := json.Marshal(fMess)
@@ -442,6 +441,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil  {
 			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
+		out.Close()
 		fmt.Printf(" --- Done pulling %v cert\n", ele)
 	}
 	fmt.Fprint(w, "Notified Quorum\n")
