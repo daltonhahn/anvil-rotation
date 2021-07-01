@@ -69,6 +69,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Collecting all artifacts for full bundles")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
@@ -97,10 +98,12 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         })
 
 
+	fmt.Println("Got my base list figured out, contacting quorum mems")
 	var wg sync.WaitGroup
         wg.Add(len(pullMap.Targets))
 	for _, t := range pullMap.Targets {
 		go func(t string) {
+			fmt.Printf("Contacting %v to find what I'm missing from them\n", t)
 			client := new(http.Client)
 			pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 			resp, err := client.Do(pReq)
@@ -116,12 +119,14 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				http.Error(w, err.Error(), 500)
 				log.Fatal()
 			}
+			fmt.Printf(" --- Got the missing items I need from %v\n", t)
 
 			for _, d := range missMap.Directories {
 				newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
 				os.MkdirAll(newpath, os.ModePerm)
 			}
 
+			fmt.Printf("Contacting %v to pull the missing files from them\n", t)
 			for _, f := range missMap.FPaths {
 				fMess := &FPMess{FilePath: f}
 				jsonData, err := json.Marshal(fMess)
@@ -132,6 +137,10 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				postVal := bytes.NewBuffer(jsonData)
 				pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 				resp, err := client.Do(pReq)
+				if err != nil {
+					http.Error(w, err.Error(), 500)
+					log.Fatalln("Unable to pull from other member")
+				}
 				defer resp.Body.Close()
 
 				if f == "acls.yaml" {
@@ -154,6 +163,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 				}
 			}
+			fmt.Printf(" --- Got the files I'm missing from %v\n", t)
 			wg.Done()
 		}(t)
 	}
