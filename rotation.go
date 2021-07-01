@@ -78,6 +78,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
 
@@ -112,6 +113,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			}{}
 			err = json.Unmarshal(b, &missMap)
 			if err != nil {
+				http.Error(w, err.Error(), 500)
 				log.Fatal()
 			}
 
@@ -124,6 +126,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				fMess := &FPMess{FilePath: f}
 				jsonData, err := json.Marshal(fMess)
 				if err != nil {
+					http.Error(w, err.Error(), 500)
 					log.Fatalln("Unable to marshal JSON")
 				}
 				postVal := bytes.NewBuffer(jsonData)
@@ -139,10 +142,12 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					}
 					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 					if err != nil  {
+						http.Error(w, err.Error(), 500)
 						fmt.Printf("FAILURE OPENING FILE\n")
 					}
 					_, err = io.Copy(out, resp.Body)
 					if err != nil  {
+						http.Error(w, err.Error(), 500)
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 					}
 					defer out.Close()
@@ -164,24 +169,28 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
 	err = cmd.Start()
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
 	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
 	err = cmd.Start()
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
 	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/root/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
 	err = cmd.Start()
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
 	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
 	err = cmd.Start()
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
@@ -191,6 +200,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			"/root/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt")
 		err = cmd.Start()
 		if err != nil {
+			http.Error(w, err.Error(), 500)
 			fmt.Printf("Failed to use cp to copy file")
 		}
 		cmd.Wait()
