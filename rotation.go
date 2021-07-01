@@ -57,7 +57,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]
 	b, err := ioutil.ReadAll(req.Body)
-	req.Body.Close()
+	defer req.Body.Close()
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
@@ -70,7 +70,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-	req.Body.Close()
+	defer req.Body.Close()
 	pullMap := struct {
 		Targets		[]string
 		Iteration	string
@@ -105,7 +105,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			resp, err := client.Do(pReq)
 
 			b, err = ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
+			defer resp.Body.Close()
 			missMap := struct {
 				Directories	[]string
 				FPaths		[]string
@@ -129,7 +129,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				postVal := bytes.NewBuffer(jsonData)
 				pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 				resp, err := client.Do(pReq)
-				resp.Body.Close()
+				defer resp.Body.Close()
 
 				if f == "acls.yaml" {
 					CombineACLs(pullMap.Iteration, resp.Body)
@@ -248,7 +248,7 @@ func valInList(a ACLMap, list []ACLMap) bool {
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]
 	b, err := ioutil.ReadAll(req.Body)
-        req.Body.Close()
+        defer req.Body.Close()
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
@@ -303,7 +303,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 
 func MakeCA(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-        req.Body.Close()
+        defer req.Body.Close()
         caContent := struct {
                 Iteration	string
                 QuorumMems	string
@@ -321,7 +321,7 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
 func SendCA(w http.ResponseWriter, req *http.Request) {
         iter := mux.Vars(req)["iter"]
         b, err := ioutil.ReadAll(req.Body)
-        req.Body.Close()
+        defer req.Body.Close()
         var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
@@ -335,7 +335,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 func PullCA(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
-        req.Body.Close()
+        defer req.Body.Close()
         caContent := struct {
                 Iteration	string
                 Prefix		string
@@ -371,7 +371,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
 			}
-			resp.Body.Close()
+			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
@@ -400,7 +400,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
 			}
-			resp.Body.Close()
+			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
@@ -433,7 +433,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			fmt.Printf("FAILURE RETRIEVING FILE\n")
 		}
-		resp.Body.Close()
+		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			fmt.Errorf("bad status: %s", resp.Status)
 		}
@@ -450,7 +450,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 
 func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-	req.Body.Close()
+	defer req.Body.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
