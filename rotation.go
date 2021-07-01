@@ -333,6 +333,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         req.Body.Close()
         caContent := struct {
@@ -344,6 +345,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
 	}
+	fmt.Println("Processed post content in request")
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
@@ -351,6 +353,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         os.MkdirAll(newpath, os.ModePerm)
 	for i:=0; i < 2; i++ {
 		if i == 0 {
+			fmt.Println(" --- Pulling my cert")
 			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -377,12 +380,9 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
-			resp, err = client.Do(pReq)
-			resp.Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
+			fmt.Println(" --- Done with cert pull")
 		} else if i == 1 {
+			fmt.Println(" --- Pulling my key")
 			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -409,14 +409,13 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
-			resp, err = client.Do(pReq)
-			resp.Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
+			fmt.Println(" --- Done pulling my key")
 		}
 	}
+	fmt.Println("Done pulling my Items")
+	fmt.Println("Pulling other certs of quorum members")
 	for _, ele := range caContent.QuorumMems {
+		fmt.Printf(" --- Pulling %v cert\n", ele)
 		out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 		if err != nil  {
 			fmt.Printf("FAILURE OPENING FILE\n")
@@ -443,11 +442,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil  {
 			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
-		resp, err = client.Do(pReq)
-		resp.Body.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
+		fmt.Printf(" --- Done pulling %v cert\n", ele)
 	}
 	fmt.Fprint(w, "Notified Quorum\n")
 }

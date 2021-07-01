@@ -27,7 +27,7 @@ func GenerateUDPKey(iteration int) {
 		panic(err)
 	}
 	_, err = gossKeyFile.Write([]byte(udpKey[:32]))
-	defer gossKeyFile.Close()
+	gossKeyFile.Close()
 }
 
 func GenerateTLSArtifacts(nodeList []string, iteration int, prefix string, quorumMems []string) {
@@ -95,8 +95,8 @@ func GenerateACLArtifacts(serviceMap []ACLMap, iteration int) {
 		tempACL.WriteString("    sname: " + ele.Svc + "\n")
 		tempACL.WriteString("    tval: " + tokVal + "\n")
 		_, err = f.Write([]byte(tempACL.String()))
-		defer f.Close()
+		f.Close()
 	}
         _, err = ACLFile.Write([]byte(fullACLs.String()))
-        defer ACLFile.Close()
+        ACLFile.Close()
 }
