@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"bytes"
-	"sync"
 
 	"strconv"
 	"github.com/gorilla/mux"
@@ -99,75 +98,69 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 
 	fmt.Println("Got my base list figured out, contacting quorum mems")
-	var wg sync.WaitGroup
-        wg.Add(len(pullMap.Targets))
 	for _, t := range pullMap.Targets {
-		go func(t string) {
-			fmt.Printf("Contacting %v to find what I'm missing from them\n", t)
-			client := new(http.Client)
-			pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
-			resp, err := client.Do(pReq)
+		fmt.Printf("Contacting %v to find what I'm missing from them\n", t)
+		client := new(http.Client)
+		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
+		resp, err := client.Do(pReq)
 
-			b, err = ioutil.ReadAll(resp.Body)
-			defer resp.Body.Close()
-			missMap := struct {
-				Directories	[]string
-				FPaths		[]string
-			}{}
-			err = json.Unmarshal(b, &missMap)
+		b, err = ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		missMap := struct {
+			Directories	[]string
+			FPaths		[]string
+		}{}
+		err = json.Unmarshal(b, &missMap)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			log.Fatal()
+		}
+		fmt.Printf(" --- Got the missing items I need from %v\n", t)
+
+		for _, d := range missMap.Directories {
+			newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
+			os.MkdirAll(newpath, os.ModePerm)
+		}
+
+		fmt.Printf("Contacting %v to pull the missing files from them\n", t)
+		for _, f := range missMap.FPaths {
+			fMess := &FPMess{FilePath: f}
+			jsonData, err := json.Marshal(fMess)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
-				log.Fatal()
+				log.Fatalln("Unable to marshal JSON")
 			}
-			fmt.Printf(" --- Got the missing items I need from %v\n", t)
-
-			for _, d := range missMap.Directories {
-				newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
-				os.MkdirAll(newpath, os.ModePerm)
+			postVal := bytes.NewBuffer(jsonData)
+			pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+			resp, err := client.Do(pReq)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				log.Fatalln("Unable to pull from other member")
 			}
+			defer resp.Body.Close()
 
-			fmt.Printf("Contacting %v to pull the missing files from them\n", t)
-			for _, f := range missMap.FPaths {
-				fMess := &FPMess{FilePath: f}
-				jsonData, err := json.Marshal(fMess)
-				if err != nil {
+			if f == "acls.yaml" {
+				CombineACLs(pullMap.Iteration, resp.Body)
+			} else {
+				if resp.StatusCode != http.StatusOK {
+					fmt.Errorf("bad status: %s", resp.Status)
+				}
+				out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
+				if err != nil  {
 					http.Error(w, err.Error(), 500)
-					log.Fatalln("Unable to marshal JSON")
+					fmt.Printf("FAILURE OPENING FILE\n")
 				}
-				postVal := bytes.NewBuffer(jsonData)
-				pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
-				resp, err := client.Do(pReq)
-				if err != nil {
+				_, err = io.Copy(out, resp.Body)
+				if err != nil  {
 					http.Error(w, err.Error(), 500)
-					log.Fatalln("Unable to pull from other member")
+					fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 				}
-				defer resp.Body.Close()
+				defer out.Close()
 
-				if f == "acls.yaml" {
-					CombineACLs(pullMap.Iteration, resp.Body)
-				} else {
-					if resp.StatusCode != http.StatusOK {
-						fmt.Errorf("bad status: %s", resp.Status)
-					}
-					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
-					if err != nil  {
-						http.Error(w, err.Error(), 500)
-						fmt.Printf("FAILURE OPENING FILE\n")
-					}
-					_, err = io.Copy(out, resp.Body)
-					if err != nil  {
-						http.Error(w, err.Error(), 500)
-						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
-					}
-					defer out.Close()
-
-				}
 			}
-			fmt.Printf(" --- Got the files I'm missing from %v\n", t)
-			wg.Done()
-		}(t)
+		}
+		fmt.Printf(" --- Got the files I'm missing from %v\n", t)
 	}
-	wg.Wait()
 
         newpath := filepath.Join("/root/anvil/", "config/gossip", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
