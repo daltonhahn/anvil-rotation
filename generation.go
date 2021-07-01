@@ -45,7 +45,7 @@ func GenCA(iteration int, numQ int) {
                 Type : "RSA PRIVATE KEY",
                 Bytes : x509.MarshalPKCS1PrivateKey(CAkeyBytes)}
         pem.Encode(pemfile, pemkey)
-        pemfile.Close()
+        defer pemfile.Close()
 
         CAcert := &x509.Certificate{
                 SerialNumber: big.NewInt(2019),
@@ -76,7 +76,7 @@ func GenCA(iteration int, numQ int) {
                 Type:  "CERTIFICATE",
                 Bytes: certBytes,
 	})
-	certPEM.Close()
+	defer certPEM.Close()
 
 	// Make gofunc()
 	var wg sync.WaitGroup
@@ -97,7 +97,7 @@ func GenCA(iteration int, numQ int) {
 				Type : "RSA PRIVATE KEY",
 				Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
 			pem.Encode(pemfile, pemkey)
-			pemfile.Close()
+			defer pemfile.Close()
 
 			cert := &x509.Certificate{
 				SerialNumber: big.NewInt(2019),
@@ -131,7 +131,7 @@ func GenCA(iteration int, numQ int) {
 				Type:  "CERTIFICATE",
 				Bytes: certBytes,
 			})
-			certPEM.Close()
+			defer certPEM.Close()
 			wg.Done()
 		}(i)
 	}
@@ -170,7 +170,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		Type : "RSA PRIVATE KEY",
 		Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
 	pem.Encode(pemfile, pemkey)
-        pemfile.Close()
+        defer pemfile.Close()
 
 	ips, _ := net.LookupIP(nodeName)
 	var targIP net.IP
@@ -210,7 +210,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
-	certPEM.Close()
+	defer certPEM.Close()
 
 	for _, ele := range quorumMems {
 		cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+ele+".crt",
