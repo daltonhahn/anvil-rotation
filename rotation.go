@@ -57,7 +57,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]
 	b, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
+	req.Body.Close()
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
@@ -70,7 +70,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
+	req.Body.Close()
 	pullMap := struct {
 		Targets		[]string
 		Iteration	string
@@ -105,7 +105,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			resp, err := client.Do(pReq)
 
 			b, err = ioutil.ReadAll(resp.Body)
-			defer resp.Body.Close()
+			resp.Body.Close()
 			missMap := struct {
 				Directories	[]string
 				FPaths		[]string
@@ -129,20 +129,19 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 				postVal := bytes.NewBuffer(jsonData)
 				pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 				resp, err := client.Do(pReq)
+				resp.Body.Close()
 
 				if f == "acls.yaml" {
-					defer resp.Body.Close()
 					CombineACLs(pullMap.Iteration, resp.Body)
 				} else {
+					if resp.StatusCode != http.StatusOK {
+						fmt.Errorf("bad status: %s", resp.Status)
+					}
 					out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 					if err != nil  {
 						fmt.Printf("FAILURE OPENING FILE\n")
 					}
-					defer out.Close()
-					defer resp.Body.Close()
-					if resp.StatusCode != http.StatusOK {
-						fmt.Errorf("bad status: %s", resp.Status)
-					}
+					out.Close()
 					_, err = io.Copy(out, resp.Body)
 					if err != nil  {
 						fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -249,7 +248,7 @@ func valInList(a ACLMap, list []ACLMap) bool {
 func CollectAll(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]
 	b, err := ioutil.ReadAll(req.Body)
-        defer req.Body.Close()
+        req.Body.Close()
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
@@ -304,7 +303,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 
 func MakeCA(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-        defer req.Body.Close()
+        req.Body.Close()
         caContent := struct {
                 Iteration	string
                 QuorumMems	string
@@ -322,7 +321,7 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
 func SendCA(w http.ResponseWriter, req *http.Request) {
         iter := mux.Vars(req)["iter"]
         b, err := ioutil.ReadAll(req.Body)
-        defer req.Body.Close()
+        req.Body.Close()
         var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
@@ -335,7 +334,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-        defer req.Body.Close()
+        req.Body.Close()
         caContent := struct {
                 Iteration	string
                 Prefix		string
@@ -356,7 +355,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
-			defer out.Close()
+			out.Close()
 
 			fMess := &FPMess{FilePath: caContent.Prefix+".crt"}
                         jsonData, err := json.Marshal(fMess)
@@ -370,7 +369,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
 			}
-			defer resp.Body.Close()
+			resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
@@ -379,12 +378,16 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
 			resp, err = client.Do(pReq)
+			resp.Body.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
 		} else if i == 1 {
 			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
-			defer out.Close()
+			out.Close()
 
 			fMess := &FPMess{FilePath: caContent.Prefix+".key"}
                         jsonData, err := json.Marshal(fMess)
@@ -398,7 +401,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
 			}
-			defer resp.Body.Close()
+			resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
@@ -407,6 +410,10 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
 			resp, err = client.Do(pReq)
+			resp.Body.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 	for _, ele := range caContent.QuorumMems {
@@ -414,7 +421,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil  {
 			fmt.Printf("FAILURE OPENING FILE\n")
 		}
-		defer out.Close()
+		out.Close()
 
 		fMess := &FPMess{FilePath: ele+".crt"}
 		jsonData, err := json.Marshal(fMess)
@@ -428,7 +435,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			fmt.Printf("FAILURE RETRIEVING FILE\n")
 		}
-		defer resp.Body.Close()
+		resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			fmt.Errorf("bad status: %s", resp.Status)
 		}
@@ -437,6 +444,10 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
 		resp, err = client.Do(pReq)
+		resp.Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	fmt.Fprint(w, "Notified Quorum\n")
 }
@@ -444,7 +455,10 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 
 func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
+	req.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 	assignmentList := struct {
 		Quorum		[]string
 		Nodes		[]string
@@ -455,7 +469,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	}{}
 	err = json.Unmarshal(b, &assignmentList)
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
 
 	CreateDirectories(assignmentList.Iteration)
