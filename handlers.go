@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"strings"
 	"log"
 )
@@ -32,7 +31,6 @@ func GenerateUDPKey(iteration int) {
 
 func GenerateTLSArtifacts(nodeList []string, iteration int, prefix string, quorumMems []string) {
 	//start := time.Now()
-	var wg sync.WaitGroup
 	newpath := filepath.Join("/root/anvil-rotation/", "artifacts", strconv.Itoa(iteration))
 	for _, ele := range nodeList {
 		nodePath := filepath.Join(newpath, ele)
@@ -40,10 +38,8 @@ func GenerateTLSArtifacts(nodeList []string, iteration int, prefix string, quoru
 	}
 	//csrStart := time.Now()
 	for _, ele := range nodeList {
-		wg.Add(1)
-		go GenPairs(ele, iteration, &wg, prefix, quorumMems)
+		go GenPairs(ele, iteration, prefix, quorumMems)
 	}
-	wg.Wait()
 	//csrDuration := time.Since(csrStart)
 	//fmt.Println("CSR+KEY TLS Duration: ", csrDuration)
 	//crtStart := time.Now()

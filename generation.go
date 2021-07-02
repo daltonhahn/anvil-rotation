@@ -138,7 +138,7 @@ func GenCA(iteration int, numQ int) {
 	wg.Wait()
 }
 
-func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string, quorumMems []string) {
+func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string) {
         semaphore <- struct{}{}
 	caPublicKeyFile, err := ioutil.ReadFile("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+prefix+".crt")
 	if err != nil {
@@ -221,8 +221,7 @@ func GenPairs(nodeName string, iteration int, wg *sync.WaitGroup, prefix string,
 		}
 		cmd.Wait()
 	}
-	time.Sleep(2*time.Second)
+	time.Sleep(4*time.Second)
 
 	<-semaphore
-	defer wg.Done()
 }
