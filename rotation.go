@@ -68,7 +68,6 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Collecting all artifacts for full bundles")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
@@ -97,9 +96,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         })
 
 
-	fmt.Println("Got my base list figured out, contacting quorum mems")
 	for _, t := range pullMap.Targets {
-		fmt.Printf("Contacting %v to find what I'm missing from them\n", t)
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 		resp, err := client.Do(pReq)
@@ -115,14 +112,12 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, err.Error(), 500)
 			log.Fatal()
 		}
-		fmt.Printf(" --- Got the missing items I need from %v\n", t)
 
 		for _, d := range missMap.Directories {
 			newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
 			os.MkdirAll(newpath, os.ModePerm)
 		}
 
-		fmt.Printf("Contacting %v to pull the missing files from them\n", t)
 		for _, f := range missMap.FPaths {
 			fMess := &FPMess{FilePath: f}
 			jsonData, err := json.Marshal(fMess)
@@ -159,7 +154,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 			}
 		}
-		fmt.Printf(" --- Got the files I'm missing from %v\n", t)
 	}
 
         newpath := filepath.Join("/root/anvil/", "config/gossip", pullMap.Iteration)
@@ -346,7 +340,6 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
@@ -358,7 +351,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
 	}
-	fmt.Println("Processed post content in request")
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
@@ -366,7 +358,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         os.MkdirAll(newpath, os.ModePerm)
 	for i:=0; i < 2; i++ {
 		if i == 0 {
-			fmt.Println(" --- Pulling my cert")
 			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -393,9 +384,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
 			defer out.Close()
-			fmt.Println(" --- Done with cert pull")
 		} else if i == 1 {
-			fmt.Println(" --- Pulling my key")
 			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -422,13 +411,9 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
 			defer out.Close()
-			fmt.Println(" --- Done pulling my key")
 		}
 	}
-	fmt.Println("Done pulling my Items")
-	fmt.Println("Pulling other certs of quorum members")
 	for _, ele := range caContent.QuorumMems {
-		fmt.Printf(" --- Pulling %v cert\n", ele)
 		out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 		if err != nil  {
 			fmt.Printf("FAILURE OPENING FILE\n")
@@ -455,7 +440,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
 		defer out.Close()
-		fmt.Printf(" --- Done pulling %v cert\n", ele)
 	}
 	fmt.Fprint(w, "Notified Quorum\n")
 }
