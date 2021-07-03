@@ -8,13 +8,15 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
-	"io"
+	"errors"
+	//"io"
 	"path/filepath"
 	"strings"
 	"bytes"
 
 	"strconv"
 	"github.com/gorilla/mux"
+	"github.com/avast/retry-go/v3"
 	"gopkg.in/yaml.v2"
 )
 
@@ -99,15 +101,39 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
-		resp, err := client.Do(pReq)
 
+		var body []byte
+		fmt.Println(" ----- MissingDirs ----- ")
+		err = retry.Do(
+			func() error {
+				resp, err := client.Do(pReq)
+				if err != nil || resp.StatusCode != http.StatusOK {
+					if err == nil {
+						return errors.New("BAD STATUS CODE FROM SERVER")
+					} else {
+						return err
+					}
+				} else {
+					defer resp.Body.Close()
+					body, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return err
+					}
+					return nil
+				}
+			},
+		)
+
+		/*
+		resp, err := client.Do(pReq)
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
+		*/
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
 		}{}
-		err = json.Unmarshal(b, &missMap)
+		err = json.Unmarshal(body, &missMap)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			log.Fatal()
@@ -127,25 +153,44 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			}
 			postVal := bytes.NewBuffer(jsonData)
 			pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+			fmt.Println(" ----- Missing Files ----- ")
+			err = retry.Do(
+				func() error {
+					resp, err := client.Do(pReq)
+					if err != nil || resp.StatusCode != http.StatusOK {
+						if err == nil {
+							return errors.New("BAD STATUS CODE FROM SERVER")
+						} else {
+							return err
+						}
+					} else {
+						defer resp.Body.Close()
+						body, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							return err
+						}
+						return nil
+					}
+				},
+			)
+			/*
 			resp, err := client.Do(pReq)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				log.Fatalln("Unable to pull from other member")
 			}
 			defer resp.Body.Close()
+			*/
 
 			if f == "acls.yaml" {
-				CombineACLs(pullMap.Iteration, resp.Body)
+				CombineACLs(pullMap.Iteration, body)
 			} else {
-				if resp.StatusCode != http.StatusOK {
-					fmt.Errorf("bad status: %s", resp.Status)
-				}
 				out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
 				if err != nil  {
 					http.Error(w, err.Error(), 500)
 					fmt.Printf("FAILURE OPENING FILE\n")
 				}
-				_, err = io.Copy(out, resp.Body)
+				err = ioutil.WriteFile(out.Name(), body, 0755)
 				if err != nil  {
 					http.Error(w, err.Error(), 500)
 					fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -205,7 +250,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "DONE\n")
 }
 
-func CombineACLs(iter string, respCont io.ReadCloser) {
+func CombineACLs(iter string, respCont []byte) {
 	f, err := ioutil.ReadFile("/root/anvil-rotation/artifacts/"+iter+"/acls.yaml")
 	if err != nil {
 	    panic(err)
@@ -216,11 +261,13 @@ func CombineACLs(iter string, respCont io.ReadCloser) {
                 log.Fatalf("Unmarshal: %v", err)
         }
 	var compList []ACLMap
+	/*
         f2, err := ioutil.ReadAll(respCont)
         if err != nil {
             panic(err)
         }
-        err = yaml.Unmarshal(f2, &compList)
+	*/
+        err = yaml.Unmarshal(respCont, &compList)
         if err != nil {
                 log.Fatalf("Unmarshal: %v", err)
         }
@@ -371,6 +418,29 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                         postVal := bytes.NewBuffer(jsonData)
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
+			var body []byte
+			fmt.Println(" ----- SendCA ----- ")
+			err = retry.Do(
+				func() error {
+					resp, err := client.Do(pReq)
+					if err != nil || resp.StatusCode != http.StatusOK {
+						if err == nil {
+							return errors.New("BAD STATUS CODE FROM SERVER")
+						} else {
+							return err
+						}
+					} else {
+						defer resp.Body.Close()
+						body, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							return err
+						}
+						return nil
+					}
+				},
+			)
+
+			/*
 			resp, err := client.Do(pReq)
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
@@ -379,7 +449,9 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
-			_, err = io.Copy(out, resp.Body)
+			*/
+			err = ioutil.WriteFile(out.Name(), body, 0755)
+			//_, err = io.Copy(out, body)
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
@@ -398,6 +470,29 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                         postVal := bytes.NewBuffer(jsonData)
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
+			var body []byte
+			fmt.Println(" ----- SendCA: key ----- ")
+			err = retry.Do(
+				func() error {
+					resp, err := client.Do(pReq)
+					if err != nil || resp.StatusCode != http.StatusOK {
+						if err == nil {
+							return errors.New("BAD STATUS CODE FROM SERVER")
+						} else {
+							return err
+						}
+					} else {
+						defer resp.Body.Close()
+						body, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							return err
+						}
+						return nil
+					}
+				},
+			)
+
+			/*
 			resp, err := client.Do(pReq)
 			if err != nil {
 				fmt.Printf("FAILURE RETRIEVING FILE\n")
@@ -406,7 +501,9 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			if resp.StatusCode != http.StatusOK {
 				fmt.Errorf("bad status: %s", resp.Status)
 			}
-			_, err = io.Copy(out, resp.Body)
+			*/
+			err = ioutil.WriteFile(out.Name(), body, 0755)
+			//_, err = io.Copy(out, body)
 			if err != nil  {
 				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
@@ -427,6 +524,29 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		postVal := bytes.NewBuffer(jsonData)
 		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
+		var body []byte
+		fmt.Println(" ----- SendCA: cert ----- ")
+                err = retry.Do(
+                        func() error {
+                                resp, err := client.Do(pReq)
+                                if err != nil || resp.StatusCode != http.StatusOK {
+                                        if err == nil {
+                                                return errors.New("BAD STATUS CODE FROM SERVER")
+                                        } else {
+                                                return err
+                                        }
+                                } else {
+                                        defer resp.Body.Close()
+                                        body, err = ioutil.ReadAll(resp.Body)
+                                        if err != nil {
+                                                return err
+                                        }
+                                        return nil
+                                }
+                        },
+                )
+
+		/*
 		resp, err := client.Do(pReq)
 		if err != nil {
 			fmt.Printf("FAILURE RETRIEVING FILE\n")
@@ -435,7 +555,9 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		if resp.StatusCode != http.StatusOK {
 			fmt.Errorf("bad status: %s", resp.Status)
 		}
-		_, err = io.Copy(out, resp.Body)
+		*/
+		err = ioutil.WriteFile(out.Name(), body, 0755)
+		//_, err = io.Copy(out, body)
 		if err != nil  {
 			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
