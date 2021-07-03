@@ -387,6 +387,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
