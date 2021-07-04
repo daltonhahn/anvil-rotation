@@ -31,6 +31,13 @@ type FPMess struct {
 	FilePath	string
 }
 
+type CollectMap struct {
+	Target		string
+	FilePath	string
+}
+
+var cMap []CollectMap
+
 var testMap []ACLMap
 
 func main() {
@@ -44,9 +51,11 @@ func registerRoutes(rot_router *mux.Router) {
     rot_router.HandleFunc("/assignment", AssignedPortion).Methods("POST")
     rot_router.HandleFunc("/missing/{iter}", CollectAll).Methods("POST")
     rot_router.HandleFunc("/missingDirs/{iter}", CollectDirs).Methods("GET")
+    rot_router.HandleFunc("/prepBundle", PrepBundle).Methods("POST")
     rot_router.HandleFunc("/collectSignal", CollectSignal).Methods("POST")
     rot_router.HandleFunc("/makeCA", MakeCA).Methods("POST")
     rot_router.HandleFunc("/pullCA", PullCA).Methods("POST")
+    rot_router.HandleFunc("/fillCA", FillCA).Methods("POST")
     rot_router.HandleFunc("/sendCA/{iter}", SendCA).Methods("POST")
     rot_router.HandleFunc("/", Index).Methods("GET")
 }
@@ -69,13 +78,12 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path)
 }
 
-func CollectSignal(w http.ResponseWriter, req *http.Request) {
+func PrepBundle(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
 		Targets		[]string
 		Iteration	string
-		QuorumMems	[]string
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
@@ -83,20 +91,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		log.Fatal()
 	}
 
-	baseList := []string{}
-	searchInd := "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"
-        err = filepath.Walk(searchInd,
-            func(path string, info os.FileInfo, err error) error {
-            if err != nil {
-                return err
-            }
-            if !info.IsDir() {
-                    fpath := strings.Split(path, searchInd)
-                    baseList = append(baseList, fpath[1])
-                }
-            return nil
-        })
-
+	cMap = []CollectMap{}
 
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
@@ -142,60 +137,80 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
 			os.MkdirAll(newpath, os.ModePerm)
 		}
+		for _, fp := range missMap.FPaths {
+			tempMap := CollectMap{Target: t, FilePath: fp}
+			cMap = append(cMap, tempMap)
+		}
+	}
+}
 
-		for _, f := range missMap.FPaths {
-			fMess := &FPMess{FilePath: f}
-			jsonData, err := json.Marshal(fMess)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				log.Fatalln("Unable to marshal JSON")
-			}
-			postVal := bytes.NewBuffer(jsonData)
-			pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
-			err = retry.Do(
-				func() error {
-					resp, err := client.Do(pReq)
-					if err != nil || resp.StatusCode != http.StatusOK {
-						if err == nil {
-							return errors.New("BAD STATUS CODE FROM SERVER")
-						} else {
-							return err
-						}
+func CollectSignal(w http.ResponseWriter, req *http.Request) {
+	b, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
+	pullMap := struct {
+		Iteration	string
+		QuorumMems	[]string
+	}{}
+	err = json.Unmarshal(b, &pullMap)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		log.Fatal()
+	}
+
+	for _, entry  := range cMap {
+		fMess := &FPMess{FilePath: entry.FilePath}
+		jsonData, err := json.Marshal(fMess)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			log.Fatalln("Unable to marshal JSON")
+		}
+		postVal := bytes.NewBuffer(jsonData)
+		client := new(http.Client)
+		pReq, err := http.NewRequest("POST", "http://"+entry.Target+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+		var body []byte
+		err = retry.Do(
+			func() error {
+				resp, err := client.Do(pReq)
+				if err != nil || resp.StatusCode != http.StatusOK {
+					if err == nil {
+						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
-						defer resp.Body.Close()
-						body, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							return err
-						}
-						return nil
+						return err
 					}
-				},
-			)
-			/*
-			resp, err := client.Do(pReq)
-			if err != nil {
+				} else {
+					defer resp.Body.Close()
+					body, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return err
+					}
+					return nil
+				}
+			},
+		)
+		/*
+		resp, err := client.Do(pReq)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			log.Fatalln("Unable to pull from other member")
+		}
+		defer resp.Body.Close()
+		*/
+
+		if entry.FilePath == "acls.yaml" {
+			CombineACLs(pullMap.Iteration, body)
+		} else {
+			out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+entry.FilePath)
+			if err != nil  {
 				http.Error(w, err.Error(), 500)
-				log.Fatalln("Unable to pull from other member")
+				fmt.Printf("FAILURE OPENING FILE\n")
 			}
-			defer resp.Body.Close()
-			*/
-
-			if f == "acls.yaml" {
-				CombineACLs(pullMap.Iteration, body)
-			} else {
-				out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+f)
-				if err != nil  {
-					http.Error(w, err.Error(), 500)
-					fmt.Printf("FAILURE OPENING FILE\n")
-				}
-				err = ioutil.WriteFile(out.Name(), body, 0755)
-				if err != nil  {
-					http.Error(w, err.Error(), 500)
-					fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
-				}
-				defer out.Close()
-
+			err = ioutil.WriteFile(out.Name(), body, 0755)
+			if err != nil  {
+				http.Error(w, err.Error(), 500)
+				fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 			}
+			defer out.Close()
+
 		}
 	}
 
@@ -382,6 +397,42 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
         path := "/root/anvil-rotation/config/"+iter+"/"+filepath.FilePath
         w.Header().Set("Content-Type", "application/text")
         http.ServeFile(w, req, path)
+}
+
+func FillCA(w http.ResponseWriter, req *http.Request) {
+	b, err := ioutil.ReadAll(req.Body)
+        defer req.Body.Close()
+        caContent := struct {
+                Iteration	string
+		QuorumMems	[]string
+        }{}
+        err = json.Unmarshal(b, &caContent)
+        if err != nil {
+                log.Fatal(err)
+	}
+	baseList := []string{}
+	searchInd := "/root/anvil-rotation/artifacts/"+caContent.Iteration+"/"
+        err = filepath.Walk(searchInd,
+            func(path string, info os.FileInfo, err error) error {
+            if err != nil {
+                return err
+            }
+            if info.IsDir() && !strings.Contains(info.Name(), "server") {
+                    baseList = append(baseList, info.Name())
+                }
+            return nil
+        })
+	for _, dirName := range baseList {
+		for _, ele := range caContent.QuorumMems {
+			cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt",
+				"/root/anvil-rotation/artifacts/"+caContent.Iteration+"/"+dirName+"/"+ele+".crt")
+			err := cmd.Start()
+			if err != nil {
+				log.Println(err)
+			}
+			cmd.Wait()
+		}
+	}
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {

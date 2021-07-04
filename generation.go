@@ -2,7 +2,6 @@ package main
 
 import (
         "os"
-	"os/exec"
 	"net"
         "strconv"
         crand "crypto/rand"
@@ -212,16 +211,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 	})
 	defer certPEM.Close()
 
-	for _, ele := range quorumMems {
-		cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+ele+".crt",
-			"/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+ele+".crt")
-		err := cmd.Start()
-		if err != nil {
-			log.Println(err)
-		}
-		cmd.Wait()
-	}
-	time.Sleep(4*time.Second)
+	time.Sleep(2*time.Second)
 
 	<-semaphore
 }
