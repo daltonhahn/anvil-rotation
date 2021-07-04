@@ -103,7 +103,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
 		var body []byte
-		fmt.Println(" ----- MissingDirs ----- ")
 		err = retry.Do(
 			func() error {
 				resp, err := client.Do(pReq)
@@ -153,7 +152,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 			}
 			postVal := bytes.NewBuffer(jsonData)
 			pReq, err = http.NewRequest("POST", "http://"+t+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
-			fmt.Println(" ----- Missing Files ----- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -387,7 +385,6 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
@@ -420,7 +417,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
-			fmt.Println(" ----- SendCA ----- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -472,7 +468,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
-			fmt.Println(" ----- SendCA: key ----- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -526,7 +521,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 		var body []byte
-		fmt.Println(" ----- SendCA: cert ----- ")
                 err = retry.Do(
                         func() error {
                                 resp, err := client.Do(pReq)
