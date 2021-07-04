@@ -79,6 +79,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 }
 
 func PrepBundle(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Landed in prepBundle")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
@@ -94,6 +95,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 	cMap = []CollectMap{}
 
 	for _, t := range pullMap.Targets {
+		fmt.Println("Collecting list of missing from " + t)
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
@@ -142,9 +144,11 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			cMap = append(cMap, tempMap)
 		}
 	}
+	fmt.Printf("I'm Missing: \n%v\n", cMap)
 }
 
 func CollectSignal(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("Landed in collectSignal\n")
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	pullMap := struct {
@@ -157,6 +161,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		log.Fatal()
 	}
 
+	fmt.Printf("Looping through everything that I'm missing\n")
 	for _, entry  := range cMap {
 		fMess := &FPMess{FilePath: entry.FilePath}
 		jsonData, err := json.Marshal(fMess)
@@ -213,6 +218,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 
 		}
 	}
+	fmt.Printf("Done Collecting what was missing\n")
 
         newpath := filepath.Join("/root/anvil/", "config/gossip", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
@@ -260,6 +266,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 		cmd.Wait()
 	}
+	fmt.Printf("Done moving my config files to Anvil\n")
 	fmt.Fprintf(w, "DONE\n")
 }
 
@@ -400,6 +407,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func FillCA(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("Landed in fillCA\n")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
@@ -422,6 +430,7 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
                 }
             return nil
         })
+	fmt.Printf("I need to fill in Quorum Certs to these dirs:\n%v\n", baseList)
 	for _, dirName := range baseList {
 		for _, ele := range caContent.QuorumMems {
 			cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt",
@@ -433,6 +442,7 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
 			cmd.Wait()
 		}
 	}
+	fmt.Printf("Done filling Quorum certs\n")
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
