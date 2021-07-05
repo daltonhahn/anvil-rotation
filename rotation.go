@@ -368,6 +368,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
+	fmt.Printf("\t\t TELLING REQUESTER I HAVE: %v\n", dirMap.FPaths)
 
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
