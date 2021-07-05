@@ -118,6 +118,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 					return nil
 				}
 			},
+			retry.Attempts(3),
 		)
 
 		/*
@@ -191,6 +192,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 					return nil
 				}
 			},
+			retry.Attempts(3),
 		)
 		/*
 		resp, err := client.Do(pReq)
@@ -496,6 +498,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 						return nil
 					}
 				},
+				retry.Attempts(3),
 			)
 
 			/*
@@ -547,6 +550,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 						return nil
 					}
 				},
+				retry.Attempts(3),
 			)
 
 			/*
@@ -600,6 +604,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                                         return nil
                                 }
                         },
+			retry.Attempts(3),
                 )
 
 		/*
