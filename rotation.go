@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"fmt"
 	"net/http"
 	"log"
@@ -368,7 +369,6 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
-	fmt.Printf("\t\t TELLING REQUESTER I HAVE: %v\n", dirMap.FPaths)
 
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
@@ -654,5 +654,6 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	}
 	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration, assignmentList.Prefix, assignmentList.Quorum)
 	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
+	time.Sleep(2*time.Second)
 	fmt.Fprint(w, "200 OK \r\n")
 }
