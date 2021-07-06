@@ -644,6 +644,6 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	}
 	GenerateTLSArtifacts(assignmentList.Nodes, assignmentList.Iteration, assignmentList.Prefix, assignmentList.Quorum)
 	GenerateACLArtifacts(assignmentList.SvcMap, assignmentList.Iteration)
-	time.Sleep(2*time.Second)
+	time.Sleep(5*time.Second)
 	fmt.Fprint(w, "200 OK \r\n")
 }
