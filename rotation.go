@@ -106,12 +106,14 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			func() error {
 				resp, err := client.Do(pReq)
 				if err != nil || resp.StatusCode != http.StatusOK {
+					fmt.Printf("Got an error or bad resp code\n")
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
 						return err
 					}
 				} else {
+					fmt.Printf("RESP: %v\n", resp)
 					defer resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
