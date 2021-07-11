@@ -2,7 +2,6 @@ package main
 
 import (
         "os"
-	"net"
         "strconv"
         crand "crypto/rand"
         "crypto/rsa"
@@ -82,13 +81,6 @@ func GenCA(iteration int, numQ int) {
 	wg.Add(numQ)
 	for i := 1; i < numQ+1; i++ {
 		go func(i int) {
-			ips, err := net.LookupIP("server"+strconv.Itoa(i))
-			var targIP net.IP
-			if ips[0].Equal(net.ParseIP("127.0.0.1")) {
-				targIP = ips[1]
-			} else {
-				targIP = ips[0]
-			}
 
 			keyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
 			pemfile, _ := os.Create("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
@@ -109,7 +101,6 @@ func GenCA(iteration int, numQ int) {
 					PostalCode:    []string{""},
 				},
 				DNSNames:		[]string{"server"+strconv.Itoa(i)},
-				IPAddresses:		[]net.IP{targIP},
 				NotBefore:              time.Now(),
 				NotAfter:               time.Now().AddDate(10, 0, 0),
 				IsCA:                   true,
@@ -171,13 +162,6 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 	pem.Encode(pemfile, pemkey)
         defer pemfile.Close()
 
-	ips, _ := net.LookupIP(nodeName)
-	var targIP net.IP
-	if ips[0].Equal(net.ParseIP("127.0.0.1")) {
-		targIP = ips[1]
-	} else {
-		targIP = ips[0]
-	}
 	cert := &x509.Certificate{
 		SerialNumber: big.NewInt(2019),
 		Subject: pkix.Name{
@@ -189,7 +173,6 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 			PostalCode:    []string{""},
 		},
 		DNSNames:     []string{nodeName},
-		IPAddresses:  []net.IP{targIP},
 		NotBefore:    time.Now(),
 		IsCA:	      false,
 		MaxPathLenZero: true,
