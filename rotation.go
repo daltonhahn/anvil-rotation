@@ -127,6 +127,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
+		fmt.Printf("%v\n", body)
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
