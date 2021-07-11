@@ -98,7 +98,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 	fmt.Printf("%v\n", pullMap.Targets)
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
-		pReq, err := http.NewRequest("GET", "http://"+t+".anvil-controller_dev/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
+		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
 		fmt.Println("--- Pulling missing directories ---")
 		var body []byte
@@ -176,7 +176,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 		postVal := bytes.NewBuffer(jsonData)
 		client := new(http.Client)
-		pReq, err := http.NewRequest("POST", "http://"+entry.Target+".anvil-controller_dev/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+		pReq, err := http.NewRequest("POST", "http://"+entry.Target+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 		var body []byte
 		fmt.Println("--- Pulling missing files ---")
 		err = retry.Do(
