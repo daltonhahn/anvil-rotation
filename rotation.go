@@ -88,6 +88,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
+		fmt.Println("Crashing here --- Prep Bundle")
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
@@ -132,6 +133,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		}{}
 		err = json.Unmarshal(body, &missMap)
 		if err != nil {
+			fmt.Println("Am I crashing here? --- Prep bundle 2")
 			http.Error(w, err.Error(), 500)
 			log.Fatal()
 		}
@@ -156,6 +158,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
+		fmt.Println("Am I crashing here? --- Collect Signal")
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
@@ -324,6 +327,7 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
+		fmt.Println("Crashing here? --- CollectAll")
                 log.Fatal(err)
         }
 	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
@@ -382,6 +386,7 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
+		fmt.Println("Crashing here --- MakeCA")
                 log.Fatal(err)
         }
 	iter, _ := strconv.Atoi(caContent.Iteration)
@@ -397,6 +402,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
         var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
+		fmt.Println("Crashing here -- SendCA")
                 log.Fatal(err)
         }
         path := "/root/anvil-rotation/config/"+iter+"/"+filepath.FilePath
@@ -413,6 +419,7 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
+		fmt.Println("Crashing here --- Fill CA")
                 log.Fatal(err)
 	}
 	baseList := []string{}
@@ -450,6 +457,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
+		fmt.Println("Crashing here --- Pull CA")
                 log.Fatal(err)
 	}
 
@@ -628,6 +636,7 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	if err != nil {
+		fmt.Println("Crashing here --- Assignment")
 		log.Fatal(err)
 	}
 	assignmentList := struct {
