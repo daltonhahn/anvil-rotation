@@ -95,6 +95,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 
 	cMap = []CollectMap{}
 
+	fmt.Printf("%v\n", pullMap.Targets)
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
