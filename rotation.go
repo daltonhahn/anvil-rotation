@@ -98,6 +98,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
+		fmt.Println("--- Pulling missing directories ---")
 		var body []byte
 		err = retry.Do(
 			func() error {
@@ -170,6 +171,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("POST", "http://"+entry.Target+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 		var body []byte
+		fmt.Println("--- Pulling missing files ---")
 		err = retry.Do(
 			func() error {
 				resp, err := client.Do(pReq)
@@ -471,6 +473,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
+			fmt.Println(" --- Sending my CA contents --- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -523,6 +526,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
+			fmt.Println(" --- Sending my CA contents --- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -577,6 +581,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 		var body []byte
+		fmt.Println(" --- Sending my CA contents --- ")
                 err = retry.Do(
                         func() error {
                                 resp, err := client.Do(pReq)
