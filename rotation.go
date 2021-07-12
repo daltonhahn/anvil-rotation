@@ -88,7 +88,6 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
-		fmt.Println("Crashing here --- Prep Bundle")
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
@@ -106,7 +105,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			func() error {
 				resp, err := client.Do(pReq)
 				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Printf("Got an error or bad resp code: %v\n", resp)
+					fmt.Printf("Got an error or bad resp code: %v --- %v\n", resp, err)
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
@@ -162,7 +161,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	}{}
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
-		fmt.Println("Am I crashing here? --- Collect Signal")
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
@@ -178,7 +176,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("POST", "http://"+entry.Target+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 		var body []byte
-		fmt.Println("--- Pulling missing files ---")
 		err = retry.Do(
 			func() error {
 				resp, err := client.Do(pReq)
@@ -331,7 +328,6 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
-		fmt.Println("Crashing here? --- CollectAll")
                 log.Fatal(err)
         }
 	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
@@ -390,7 +386,6 @@ func MakeCA(w http.ResponseWriter, req *http.Request) {
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
-		fmt.Println("Crashing here --- MakeCA")
                 log.Fatal(err)
         }
 	iter, _ := strconv.Atoi(caContent.Iteration)
@@ -406,7 +401,6 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
         var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
-		fmt.Println("Crashing here -- SendCA")
                 log.Fatal(err)
         }
         path := "/root/anvil-rotation/config/"+iter+"/"+filepath.FilePath
@@ -423,7 +417,6 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
-		fmt.Println("Crashing here --- Fill CA")
                 log.Fatal(err)
 	}
 	baseList := []string{}
@@ -461,7 +454,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         }{}
         err = json.Unmarshal(b, &caContent)
         if err != nil {
-		fmt.Println("Crashing here --- Pull CA")
                 log.Fatal(err)
 	}
 
@@ -485,7 +477,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
-			fmt.Println(" --- Sending my CA contents --- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -538,7 +529,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
-			fmt.Println(" --- Sending my CA contents --- ")
 			err = retry.Do(
 				func() error {
 					resp, err := client.Do(pReq)
@@ -593,7 +583,6 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 		var body []byte
-		fmt.Println(" --- Sending my CA contents --- ")
                 err = retry.Do(
                         func() error {
                                 resp, err := client.Do(pReq)
@@ -640,7 +629,6 @@ func AssignedPortion(w http.ResponseWriter, req *http.Request) {
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	if err != nil {
-		fmt.Println("Crashing here --- Assignment")
 		log.Fatal(err)
 	}
 	assignmentList := struct {
