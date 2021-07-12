@@ -336,6 +336,7 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("\tLanded in CollectDirs\n")
 	iter := mux.Vars(req)["iter"]
 	dirMap := struct {
 		Directories	[]string
@@ -352,6 +353,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 			dirMap.Directories = append(dirMap.Directories, f.Name())
 		}
 	}
+	fmt.Printf("\tCollectDirs --- DIRS: %v\n", dirMap.Directories)
 
 	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
 	err = filepath.Walk(searchInd,
@@ -368,6 +370,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
+	fmt.Printf("\tCollectDirs --- FPATHS: %v\n", dirMap.FPaths)
 
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
