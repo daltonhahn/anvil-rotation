@@ -94,25 +94,21 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 
 	cMap = []CollectMap{}
 
-	fmt.Printf("%v\n", pullMap.Targets)
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
-		fmt.Println("--- Pulling missing directories ---")
 		var body []byte
 		err = retry.Do(
 			func() error {
 				resp, err := client.Do(pReq)
 				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Printf("Got an error or bad resp code: %v --- %v\n", resp, err)
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
 						return err
 					}
 				} else {
-					fmt.Printf("RESP: %v\n", resp)
 					defer resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
@@ -129,14 +125,12 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
-		fmt.Printf("%v\n", body)
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
 		}{}
 		err = json.Unmarshal(body, &missMap)
 		if err != nil {
-			fmt.Println("Am I crashing here? --- Prep bundle 2")
 			http.Error(w, err.Error(), 500)
 			log.Fatal()
 		}
@@ -336,7 +330,6 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
-	fmt.Printf("\tLanded in CollectDirs\n")
 	iter := mux.Vars(req)["iter"]
 	dirMap := struct {
 		Directories	[]string
@@ -353,7 +346,6 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 			dirMap.Directories = append(dirMap.Directories, f.Name())
 		}
 	}
-	fmt.Printf("\tCollectDirs --- DIRS: %v\n", dirMap.Directories)
 
 	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
 	err = filepath.Walk(searchInd,
@@ -370,7 +362,6 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
-	fmt.Printf("\tCollectDirs --- FPATHS: %v\n", dirMap.FPaths)
 
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
