@@ -336,6 +336,7 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("Landed in CollectDirs\n")
 	iter := mux.Vars(req)["iter"]
 	dirMap := struct {
 		Directories	[]string
@@ -368,11 +369,12 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
-
+	fmt.Printf("%v\n", dirMap)
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
                 log.Fatalln("Unable to marshal JSON")
         }
+	fmt.Printf("\t%v\n", jsonData)
         w.Header().Set("Content-Type", "application/json")
         fmt.Fprintf(w, string(jsonData))
 }
