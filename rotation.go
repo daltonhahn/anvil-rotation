@@ -112,12 +112,13 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 						return err
 					}
 				} else {
-					fmt.Printf("NO ERR: %v\n", resp)
+					fmt.Printf("No error: %v\n", resp)
 					defer resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						return err
 					}
+					fmt.Printf("BODY: %v\n", string(body))
 					return nil
 				}
 			},
