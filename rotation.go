@@ -91,10 +91,12 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
+	fmt.Printf("%v\n", pullMap)
 
 	cMap = []CollectMap{}
 
 	for _, t := range pullMap.Targets {
+		fmt.Printf("Requesting mapping from %v\n", t)
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
@@ -110,6 +112,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 						return err
 					}
 				} else {
+					fmt.Printf("NO ERR: %v\n", resp)
 					defer resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
@@ -126,6 +129,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
+		fmt.Printf("%v\n", body)
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
