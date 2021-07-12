@@ -103,6 +103,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			func() error {
 				resp, err := client.Do(pReq)
 				if err != nil || resp.StatusCode != http.StatusOK {
+					fmt.Printf("%v\n", resp)
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
