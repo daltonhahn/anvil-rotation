@@ -91,12 +91,10 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
-	fmt.Printf(" ---- %v\n", pullMap)
 
 	cMap = []CollectMap{}
 
 	for _, t := range pullMap.Targets {
-		fmt.Printf(" ---- Requesting mapping from %v\n", t)
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
@@ -127,7 +125,6 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
-		fmt.Printf("\tBody trying to marshal: %v\n", string(body))
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
@@ -333,7 +330,6 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
-	fmt.Printf(" ---- Landed in CollectDirs\n")
 	iter := mux.Vars(req)["iter"]
 	dirMap := struct {
 		Directories	[]string
@@ -345,13 +341,11 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 	}
 
-	fmt.Printf(" ---- Looping through contents of artifacts dir\n")
 	for _, f := range topLvl {
 		if f.IsDir() {
 			dirMap.Directories = append(dirMap.Directories, f.Name())
 		}
 	}
-	fmt.Printf(" ---- Collected directories for dirmap\n")
 
 	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
 	err = filepath.Walk(searchInd,
@@ -368,13 +362,10 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
-	fmt.Printf(" ---- Collected filepaths for dirmap\n")
-	fmt.Printf(" ---- %v\n", dirMap)
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
                 log.Fatalln("Unable to marshal JSON")
         }
-	fmt.Printf("\t%v\n", jsonData)
         w.Header().Set("Content-Type", "application/json")
         fmt.Fprintf(w, string(jsonData))
 }
