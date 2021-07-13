@@ -91,12 +91,12 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
-	fmt.Printf("%v\n", pullMap)
+	fmt.Printf(" ---- %v\n", pullMap)
 
 	cMap = []CollectMap{}
 
 	for _, t := range pullMap.Targets {
-		fmt.Printf("Requesting mapping from %v\n", t)
+		fmt.Printf(" ---- Requesting mapping from %v\n", t)
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
@@ -105,20 +105,20 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			func() error {
 				resp, err := client.Do(pReq)
 				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Printf("%v\n", resp)
+					fmt.Printf("\t%v\n", resp)
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
 						return err
 					}
 				} else {
-					fmt.Printf("No error: %v\n", resp)
+					fmt.Printf("\tNo error: %v\n", resp)
 					defer resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil || body == nil {
 						return err
 					}
-					fmt.Printf("BODY: %v\n", string(body))
+					fmt.Printf("\tBODY: %v\n", string(body))
 					return nil
 				}
 			},
@@ -130,7 +130,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
-		fmt.Printf("%v\n", body)
+		fmt.Printf("\tBody trying to marshal: %v\n", body)
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
@@ -336,7 +336,7 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func CollectDirs(w http.ResponseWriter, req *http.Request) {
-	fmt.Printf("Landed in CollectDirs\n")
+	fmt.Printf(" ---- Landed in CollectDirs\n")
 	iter := mux.Vars(req)["iter"]
 	dirMap := struct {
 		Directories	[]string
@@ -348,11 +348,13 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 	}
 
+	fmt.Printf(" ---- Looping through contents of artifacts dir\n")
 	for _, f := range topLvl {
 		if f.IsDir() {
 			dirMap.Directories = append(dirMap.Directories, f.Name())
 		}
 	}
+	fmt.Printf(" ---- Collected directories for dirmap\n")
 
 	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
 	err = filepath.Walk(searchInd,
@@ -369,7 +371,8 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 	    log.Println(err)
 	}
-	fmt.Printf("%v\n", dirMap)
+	fmt.Printf(" ---- Collected filepaths for dirmap\n")
+	fmt.Printf(" ---- %v\n", dirMap)
 	jsonData, err := json.Marshal(dirMap)
         if err != nil {
                 log.Fatalln("Unable to marshal JSON")
