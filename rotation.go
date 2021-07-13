@@ -105,20 +105,17 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			func() error {
 				resp, err := client.Do(pReq)
 				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Printf("\t%v\n", resp)
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
 					} else {
 						return err
 					}
 				} else {
-					fmt.Printf("\tNo error: %v\n", resp)
 					defer resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil || resp.Body == nil || body == nil {
 						return err
 					}
-					fmt.Printf("\tBODY: %v\n", body)
 					return nil
 				}
 			},
@@ -130,7 +127,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
-		fmt.Printf("\tBody trying to marshal: %v\n", body)
+		fmt.Printf("\tBody trying to marshal: %v\n", string(body))
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
