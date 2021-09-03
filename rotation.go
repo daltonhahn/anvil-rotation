@@ -426,7 +426,7 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
         })
 	for _, dirName := range baseList {
 		for _, ele := range caContent.QuorumMems {
-			cmd := exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt",
+			cmd := exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt",
 				"/home/anvil/Desktop/anvil-rotation/artifacts/"+caContent.Iteration+"/"+dirName+"/"+ele+".crt")
 			err := cmd.Start()
 			if err != nil {
