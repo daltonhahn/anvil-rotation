@@ -413,7 +413,7 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
                 log.Fatal(err)
 	}
 	baseList := []string{}
-	searchInd := "/root/anvil-rotation/artifacts/"+caContent.Iteration+"/"
+	searchInd := "/home/anvil/Desktop/anvil-rotation/artifacts/"+caContent.Iteration+"/"
         err = filepath.Walk(searchInd,
             func(path string, info os.FileInfo, err error) error {
             if err != nil {
@@ -426,8 +426,8 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
         })
 	for _, dirName := range baseList {
 		for _, ele := range caContent.QuorumMems {
-			cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt",
-				"/root/anvil-rotation/artifacts/"+caContent.Iteration+"/"+dirName+"/"+ele+".crt")
+			cmd := exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt",
+				"/home/anvil/Desktop/anvil-rotation/artifacts/"+caContent.Iteration+"/"+dirName+"/"+ele+".crt")
 			err := cmd.Start()
 			if err != nil {
 				log.Println(err)
