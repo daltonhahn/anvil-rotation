@@ -35,10 +35,10 @@ func StringWithCharset(length int, charset string) string {
 }
 
 func GenCA(iteration int, numQ int) {
-        newpath := filepath.Join("/root/anvil-rotation/", "config", strconv.Itoa(iteration))
+        newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation/", "config", strconv.Itoa(iteration))
         os.MkdirAll(newpath, os.ModePerm)
         CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
-        pemfile, _ := os.Create("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.key")
+        pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.key")
         var pemkey = &pem.Block{
                 Type : "RSA PRIVATE KEY",
                 Bytes : x509.MarshalPKCS1PrivateKey(CAkeyBytes)}
@@ -69,7 +69,7 @@ func GenCA(iteration int, numQ int) {
                 log.Fatalln(err)
         }
 
-        certPEM, _ := os.Create("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt")
+        certPEM, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.crt")
         pem.Encode(certPEM, &pem.Block{
                 Type:  "CERTIFICATE",
                 Bytes: certBytes,
@@ -83,7 +83,7 @@ func GenCA(iteration int, numQ int) {
 		go func(i int) {
 
 			keyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
-			pemfile, _ := os.Create("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
+			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
 			var pemkey = &pem.Block{
 				Type : "RSA PRIVATE KEY",
 				Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
@@ -116,7 +116,7 @@ func GenCA(iteration int, numQ int) {
 				log.Fatalln(err)
 			}
 
-			certPEM, _ := os.Create("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt")
+			certPEM, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt")
 			pem.Encode(certPEM, &pem.Block{
 				Type:  "CERTIFICATE",
 				Bytes: certBytes,
@@ -130,7 +130,7 @@ func GenCA(iteration int, numQ int) {
 
 func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string) {
         semaphore <- struct{}{}
-	caPublicKeyFile, err := ioutil.ReadFile("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+prefix+".crt")
+	caPublicKeyFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+prefix+".crt")
 	if err != nil {
 		panic(err)
 	}
@@ -142,7 +142,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 	if err != nil {
 		panic(err)
 	}
-	caPrivateKeyFile, err := ioutil.ReadFile("/root/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+prefix+".key")
+	caPrivateKeyFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/"+prefix+".key")
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +155,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 		panic(err)
 	}
         keyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
-        pemfile, _ := os.Create("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
+        pemfile, _ := os.Create("/hom/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
         var pemkey = &pem.Block{
 		Type : "RSA PRIVATE KEY",
 		Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
@@ -187,7 +187,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 		log.Fatalln(err)
 	}
 
-	certPEM, _ := os.Create("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt")
+	certPEM, _ := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".crt")
 	pem.Encode(certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
