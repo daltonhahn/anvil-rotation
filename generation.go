@@ -83,7 +83,7 @@ func GenCA(iteration int, numQ int) {
 		go func(i int) {
 
 			keyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
-			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".key")
+			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/anvilserver"+strconv.Itoa(i)+".key")
 			var pemkey = &pem.Block{
 				Type : "RSA PRIVATE KEY",
 				Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
@@ -100,7 +100,7 @@ func GenCA(iteration int, numQ int) {
 					StreetAddress: []string{""},
 					PostalCode:    []string{""},
 				},
-				DNSNames:		[]string{"server"+strconv.Itoa(i)},
+				DNSNames:		[]string{"anvilserver"+strconv.Itoa(i)},
 				NotBefore:              time.Now(),
 				NotAfter:               time.Now().AddDate(10, 0, 0),
 				IsCA:                   true,
@@ -116,7 +116,7 @@ func GenCA(iteration int, numQ int) {
 				log.Fatalln(err)
 			}
 
-			certPEM, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/server"+strconv.Itoa(i)+".crt")
+			certPEM, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/anvilserver"+strconv.Itoa(i)+".crt")
 			pem.Encode(certPEM, &pem.Block{
 				Type:  "CERTIFICATE",
 				Bytes: certBytes,
