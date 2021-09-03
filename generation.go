@@ -155,7 +155,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 		panic(err)
 	}
         keyBytes, _ := rsa.GenerateKey(crand.Reader, 2048)
-        pemfile, _ := os.Create("/hom/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
+        pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
         var pemkey = &pem.Block{
 		Type : "RSA PRIVATE KEY",
 		Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
