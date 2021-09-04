@@ -37,7 +37,7 @@ func StringWithCharset(length int, charset string) string {
 func GenCA(iteration int, numQ int) {
         newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation/", "config", strconv.Itoa(iteration))
         os.MkdirAll(newpath, os.ModePerm)
-        CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 1024)
+        CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.key")
         var pemkey = &pem.Block{
                 Type : "RSA PRIVATE KEY",
@@ -82,7 +82,7 @@ func GenCA(iteration int, numQ int) {
 	for i := 1; i < numQ+1; i++ {
 		go func(i int) {
 
-			keyBytes, _ := rsa.GenerateKey(crand.Reader, 1024)
+			keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
 			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/anvilserver"+strconv.Itoa(i)+".key")
 			var pemkey = &pem.Block{
 				Type : "RSA PRIVATE KEY",
@@ -154,7 +154,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 	if err != nil {
 		panic(err)
 	}
-        keyBytes, _ := rsa.GenerateKey(crand.Reader, 1024)
+        keyBytes, _ := rsa.GenerateKey(crand.Reader, 4096)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
         var pemkey = &pem.Block{
 		Type : "RSA PRIVATE KEY",
