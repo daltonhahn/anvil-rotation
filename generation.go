@@ -4,7 +4,9 @@ import (
         "os"
         "strconv"
         crand "crypto/rand"
-        "crypto/rsa"
+        //"crypto/rsa"
+	"crypto/ecdsa"
+	"crypto/elliptic"
         "crypto/x509"
         "crypto/x509/pkix"
         "encoding/pem"
@@ -37,11 +39,12 @@ func StringWithCharset(length int, charset string) string {
 func GenCA(iteration int, numQ int) {
         newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation/", "config", strconv.Itoa(iteration))
         os.MkdirAll(newpath, os.ModePerm)
-        CAkeyBytes, _ := rsa.GenerateKey(crand.Reader, 512)
+        CAkeyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.key")
+	marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(CAkeyBytes)
         var pemkey = &pem.Block{
-                Type : "RSA PRIVATE KEY",
-                Bytes : x509.MarshalPKCS1PrivateKey(CAkeyBytes)}
+                Type : "EC PRIVATE KEY",
+                Bytes : marshKeyBytes}
         pem.Encode(pemfile, pemkey)
         defer pemfile.Close()
 
@@ -82,11 +85,12 @@ func GenCA(iteration int, numQ int) {
 	for i := 1; i < numQ+1; i++ {
 		go func(i int) {
 
-			keyBytes, _ := rsa.GenerateKey(crand.Reader, 512)
+			keyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
 			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/anvilserver"+strconv.Itoa(i)+".key")
+			marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(keyBytes)
 			var pemkey = &pem.Block{
-				Type : "RSA PRIVATE KEY",
-				Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
+				Type : "EC PRIVATE KEY",
+				Bytes : marshKeyBytes}
 			pem.Encode(pemfile, pemkey)
 			defer pemfile.Close()
 
@@ -150,15 +154,16 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 	if pemBlock == nil {
 		panic("pem.Decode failed")
 	}
-	caPrivateKey, err := x509.ParsePKCS1PrivateKey(pemBlock.Bytes)
+	caPrivateKey, err := x509.ParsePKCS8PrivateKey(pemBlock.Bytes)
 	if err != nil {
 		panic(err)
 	}
-        keyBytes, _ := rsa.GenerateKey(crand.Reader, 512)
+        keyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
+	marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(keyBytes)
         var pemkey = &pem.Block{
-		Type : "RSA PRIVATE KEY",
-		Bytes : x509.MarshalPKCS1PrivateKey(keyBytes)}
+		Type : "EC PRIVATE KEY",
+		Bytes : marshKeyBytes}
 	pem.Encode(pemfile, pemkey)
         defer pemfile.Close()
 
