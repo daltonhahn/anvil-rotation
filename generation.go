@@ -39,7 +39,7 @@ func StringWithCharset(length int, charset string) string {
 func GenCA(iteration int, numQ int) {
         newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation/", "config", strconv.Itoa(iteration))
         os.MkdirAll(newpath, os.ModePerm)
-        CAkeyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
+        CAkeyBytes, _ := ecdsa.GenerateKey(elliptic.P224(), crand.Reader)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/ca.key")
 	marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(CAkeyBytes)
         var pemkey = &pem.Block{
@@ -85,7 +85,7 @@ func GenCA(iteration int, numQ int) {
 	for i := 1; i < numQ+1; i++ {
 		go func(i int) {
 
-			keyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
+			keyBytes, _ := ecdsa.GenerateKey(elliptic.P224(), crand.Reader)
 			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/anvilserver"+strconv.Itoa(i)+".key")
 			marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(keyBytes)
 			var pemkey = &pem.Block{
@@ -158,7 +158,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
 	if err != nil {
 		panic(err)
 	}
-        keyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
+        keyBytes, _ := ecdsa.GenerateKey(elliptic.P224(), crand.Reader)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
 	marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(keyBytes)
         var pemkey = &pem.Block{
