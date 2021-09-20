@@ -74,7 +74,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
+	path := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
 }
@@ -136,7 +136,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		}
 
 		for _, d := range missMap.Directories {
-			newpath := filepath.Join("/root/anvil-rotation", "artifacts", pullMap.Iteration, d)
+			newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation", "artifacts", pullMap.Iteration, d)
 			os.MkdirAll(newpath, os.ModePerm)
 		}
 		for _, fp := range missMap.FPaths {
@@ -202,7 +202,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		if entry.FilePath == "acls.yaml" {
 			CombineACLs(pullMap.Iteration, body)
 		} else {
-			out, err := os.Create("/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+entry.FilePath)
+			out, err := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+entry.FilePath)
 			if err != nil  {
 				http.Error(w, err.Error(), 500)
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -217,35 +217,35 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-        newpath := filepath.Join("/root/anvil/", "config/gossip", pullMap.Iteration)
+        newpath := filepath.Join("/home/anvil/Desktop/anvil/", "config/gossip", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
-        newpath = filepath.Join("/root/anvil/", "config/acls", pullMap.Iteration)
+        newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/acls", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
-        newpath = filepath.Join("/root/anvil/", "config/certs", pullMap.Iteration)
+        newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
-	cmd := exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
+	cmd := exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/root/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
+	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/root/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
+	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/root/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
+	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -254,8 +254,8 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	cmd.Wait()
 
 	for _, ele := range pullMap.QuorumMems {
-		cmd = exec.Command("/usr/bin/cp", "/root/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
-			"/root/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt")
+		cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
+			"/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt")
 		err = cmd.Start()
 		if err != nil {
 			http.Error(w, err.Error(), 500)
@@ -267,7 +267,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 }
 
 func CombineACLs(iter string, respCont []byte) {
-	f, err := ioutil.ReadFile("/root/anvil-rotation/artifacts/"+iter+"/acls.yaml")
+	f, err := ioutil.ReadFile("/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/acls.yaml")
 	if err != nil {
 	    panic(err)
 	}
@@ -299,7 +299,7 @@ func CombineACLs(iter string, respCont []byte) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = ioutil.WriteFile("/root/anvil-rotation/artifacts/"+iter+"/acls.yaml", yamlOut, 0)
+	err = ioutil.WriteFile("/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/acls.yaml", yamlOut, 0)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -324,7 +324,7 @@ func CollectAll(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-	path := "/root/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
+	path := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
 }
@@ -336,7 +336,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 		FPaths		[]string
 	}{}
 
-	topLvl, err := ioutil.ReadDir("/root/anvil-rotation/artifacts/"+iter)
+	topLvl, err := ioutil.ReadDir("/home/anvil/Desktop/anvil-rotation/artifacts/"+iter)
 	if err != nil {
 		log.Println(err)
 	}
@@ -347,7 +347,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	searchInd := "/root/anvil-rotation/artifacts/"+iter+"/"
+	searchInd := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"
 	err = filepath.Walk(searchInd,
 	    func(path string, info os.FileInfo, err error) error {
 	    if err != nil {
@@ -396,7 +396,7 @@ func SendCA(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-        path := "/root/anvil-rotation/config/"+iter+"/"+filepath.FilePath
+        path := "/home/anvil/Desktop/anvil-rotation/config/"+iter+"/"+filepath.FilePath
         w.Header().Set("Content-Type", "application/text")
         http.ServeFile(w, req, path)
 }
@@ -452,11 +452,11 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
-        newpath := filepath.Join("/root/anvil-rotation/", "config", caContent.Iteration)
+        newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation/", "config", caContent.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	for i:=0; i < 2; i++ {
 		if i == 0 {
-			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+			out, err := os.OpenFile("/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
@@ -508,7 +508,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			}
 			defer out.Close()
 		} else if i == 1 {
-			out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+			out, err := os.OpenFile("/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
 			}
@@ -562,7 +562,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	for _, ele := range caContent.QuorumMems {
-		out, err := os.OpenFile("/root/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		out, err := os.OpenFile("/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+ele+".crt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 		if err != nil  {
 			fmt.Printf("FAILURE OPENING FILE\n")
 		}
