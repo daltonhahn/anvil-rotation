@@ -120,6 +120,10 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			retry.Attempts(3),
 		)
 
+		if err != nil {
+			fmt.Println(err)
+		}
+
 		/*
 		resp, err := client.Do(pReq)
 		b, err = ioutil.ReadAll(resp.Body)
@@ -129,6 +133,8 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			Directories	[]string
 			FPaths		[]string
 		}{}
+
+		fmt.Println("%s\n", body)
 		err = json.Unmarshal(body, &missMap)
 		if err != nil {
 			fmt.Println("Failing in missMap unpacking")
