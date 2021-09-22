@@ -94,9 +94,10 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 
 	cMap = []CollectMap{}
 
+	fmt.Println(pullMap)
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
-		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
+		pReq, err := http.NewRequest("GET", "http://"+t+":8080/missingDirs/"+pullMap.Iteration, nil)
 
 		var body []byte
 		err = retry.Do(
@@ -175,7 +176,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 		postVal := bytes.NewBuffer(jsonData)
 		client := new(http.Client)
-		pReq, err := http.NewRequest("POST", "http://"+entry.Target+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
+		pReq, err := http.NewRequest("POST", "http://"+entry.Target+":8080/missing/"+pullMap.Iteration, postVal)
 		var body []byte
 		err = retry.Do(
 			func() error {
@@ -474,7 +475,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                                 log.Fatalln("Unable to marshal JSON")
                         }
                         postVal := bytes.NewBuffer(jsonData)
-			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+":8080/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
 			err = retry.Do(
@@ -580,7 +581,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			log.Fatalln("Unable to marshal JSON")
 		}
 		postVal := bytes.NewBuffer(jsonData)
-		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
+		pReq, err := http.NewRequest("POST", "http://"+leaderIP+":8080/sendCA/"+caContent.Iteration, postVal)
 
 		var body []byte
                 err = retry.Do(
