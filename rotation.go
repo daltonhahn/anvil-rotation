@@ -86,8 +86,11 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		Targets		[]string
 		Iteration	string
 	}{}
+
+	fmt.Println("%s\n", b)
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
+		fmt.Println("Can't unmarshal this garbage")
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
