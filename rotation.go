@@ -72,7 +72,9 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
+		fmt.Println("Failing here?")
                 log.Fatal(err)
+		fmt.Println("YUP, FAILING HERE")
         }
 	path := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
