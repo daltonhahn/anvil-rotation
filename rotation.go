@@ -94,10 +94,9 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 
 	cMap = []CollectMap{}
 
-	fmt.Println(pullMap)
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
-		pReq, err := http.NewRequest("GET", "http://"+t+":8080/missingDirs/"+pullMap.Iteration, nil)
+		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
 		var body []byte
 		err = retry.Do(
@@ -121,10 +120,6 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			retry.Attempts(3),
 		)
 
-		if err != nil {
-			fmt.Println(err)
-		}
-
 		/*
 		resp, err := client.Do(pReq)
 		b, err = ioutil.ReadAll(resp.Body)
@@ -134,11 +129,8 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 			Directories	[]string
 			FPaths		[]string
 		}{}
-
-		fmt.Println("%s\n", body)
 		err = json.Unmarshal(body, &missMap)
 		if err != nil {
-			fmt.Println("Failing in missMap unpacking")
 			http.Error(w, err.Error(), 500)
 			log.Fatal()
 		}
@@ -176,7 +168,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 		}
 		postVal := bytes.NewBuffer(jsonData)
 		client := new(http.Client)
-		pReq, err := http.NewRequest("POST", "http://"+entry.Target+":8080/missing/"+pullMap.Iteration, postVal)
+		pReq, err := http.NewRequest("POST", "http://"+entry.Target+"/outbound/rotation/service/rotation/missing/"+pullMap.Iteration, postVal)
 		var body []byte
 		err = retry.Do(
 			func() error {
@@ -232,28 +224,28 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
-	cmd := exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
+	cmd := exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
+	cmd = exec.Command("/bin/cp", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
+	cmd = exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
+	cmd = exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -262,7 +254,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	cmd.Wait()
 
 	for _, ele := range pullMap.QuorumMems {
-		cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
+		cmd = exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
 			"/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt")
 		err = cmd.Start()
 		if err != nil {
@@ -374,6 +366,7 @@ func CollectDirs(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatalln("Unable to marshal JSON")
         }
+	fmt.Printf("%s\n", dirMap)
         w.Header().Set("Content-Type", "application/json")
         fmt.Fprintf(w, string(jsonData))
 }
@@ -475,7 +468,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                                 log.Fatalln("Unable to marshal JSON")
                         }
                         postVal := bytes.NewBuffer(jsonData)
-			pReq, err := http.NewRequest("POST", "http://"+leaderIP+":8080/sendCA/"+caContent.Iteration, postVal)
+			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
 			err = retry.Do(
@@ -581,7 +574,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			log.Fatalln("Unable to marshal JSON")
 		}
 		postVal := bytes.NewBuffer(jsonData)
-		pReq, err := http.NewRequest("POST", "http://"+leaderIP+":8080/sendCA/"+caContent.Iteration, postVal)
+		pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 		var body []byte
                 err = retry.Do(
