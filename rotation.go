@@ -439,7 +439,6 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("---Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
@@ -451,8 +450,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
 	}
-	fmt.Print("---Have caContent: %s", caContent)
-
+	fmt.Printf("-------- PREFIX: %s\n", caContent.Prefix)
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
         newpath := filepath.Join("/home/anvil/Desktop/anvil-rotation/", "config", caContent.Iteration)
@@ -511,6 +509,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 			}
 			defer out.Close()
 		} else if i == 1 {
+			fmt.Printf("-------- Trying to pull my key\n")
 			out, err := os.OpenFile("/home/anvil/Desktop/anvil-rotation/config/"+caContent.Iteration+"/"+caContent.Prefix+".key", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil  {
 				fmt.Printf("FAILURE OPENING FILE\n")
@@ -522,6 +521,8 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
                                 log.Fatalln("Unable to marshal JSON")
                         }
                         postVal := bytes.NewBuffer(jsonData)
+			fmt.Printf("Trying to tell them I want: %s\n", jsonData)
+
 			pReq, err := http.NewRequest("POST", "http://"+leaderIP+"/outbound/rotation/service/rotation/sendCA/"+caContent.Iteration, postVal)
 
 			var body []byte
@@ -545,6 +546,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
 				},
 				retry.Attempts(3),
 			)
+			fmt.Printf("----- KEY BODY CONTENTS: %s\n", body)
 
 			/*
 			resp, err := client.Do(pReq)
