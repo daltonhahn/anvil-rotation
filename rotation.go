@@ -232,28 +232,28 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
-	cmd := exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
+	cmd := exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/bin/cp", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
+	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
+	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		fmt.Printf("Failed to use cp to copy file")
 	}
 	cmd.Wait()
-	cmd = exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
+	cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml")
 	err = cmd.Start()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -262,7 +262,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	cmd.Wait()
 
 	for _, ele := range pullMap.QuorumMems {
-		cmd = exec.Command("/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
+		cmd = exec.Command("/usr/bin/cp", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+ele+".crt",
 			"/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+ele+".crt")
 		err = cmd.Start()
 		if err != nil {
