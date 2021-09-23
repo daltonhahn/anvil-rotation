@@ -93,15 +93,12 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
-	fmt.Printf("---PullMap: %s\n", pullMap)
-
 	cMap = []CollectMap{}
 
 	for _, t := range pullMap.Targets {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
-		fmt.Printf("---\t Pulling from target %s\n", t)
 		var body []byte
 		err = retry.Do(
 			func() error {
