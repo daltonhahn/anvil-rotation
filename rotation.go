@@ -69,17 +69,14 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	iter := mux.Vars(req)["iter"]
 	b, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
-	fmt.Printf("---Received: %s\n", string(b))
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
                 log.Fatal(err)
         }
 	path := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
-	fmt.Println("---Trying to return file: ", path)
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
-	fmt.Println("---Failing after serving file???")
 }
 
 func PrepBundle(w http.ResponseWriter, req *http.Request) {
