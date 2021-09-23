@@ -75,6 +75,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
                 log.Fatal(err)
         }
 	path := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
+	fmt.Println("---Trying to return file: ", path)
 	w.Header().Set("Content-Type", "application/text")
 	http.ServeFile(w, req, path)
 }
