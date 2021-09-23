@@ -99,6 +99,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		client := new(http.Client)
 		pReq, err := http.NewRequest("GET", "http://"+t+"/outbound/rotation/service/rotation/missingDirs/"+pullMap.Iteration, nil)
 
+		fmt.Printf("---\t Pulling from target %s\n", t)
 		var body []byte
 		err = retry.Do(
 			func() error {
