@@ -445,6 +445,7 @@ func FillCA(w http.ResponseWriter, req *http.Request) {
 }
 
 func PullCA(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("---Landed in PullCA")
 	b, err := ioutil.ReadAll(req.Body)
         defer req.Body.Close()
         caContent := struct {
@@ -456,6 +457,7 @@ func PullCA(w http.ResponseWriter, req *http.Request) {
         if err != nil {
                 log.Fatal(err)
 	}
+	fmt.Print("---Have caContent: %s", caContent)
 
 	leaderIP := req.Header.Get("X-Forwarded-For")
 	client := new(http.Client)
