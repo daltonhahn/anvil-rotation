@@ -91,6 +91,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		log.Fatal()
 	}
+	fmt.Printf("---PullMap: %s\n", pullMap)
 
 	cMap = []CollectMap{}
 
