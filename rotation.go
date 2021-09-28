@@ -226,7 +226,22 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
 	exec.Command("sudo", "/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt").Output()
-	exec.Command("sudo", "/bin/cp", "-f", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
+
+	src := "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key"
+	dest := "/home/anvil/Desktop/anvil/config/certs"+pullMap.Iteration+"/"+hname+".key"
+
+	bytesRead, err := ioutil.ReadFile(src)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(dest, bytesRead, 0644)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	//exec.Command("sudo", "/bin/cp", "-f", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
 	exec.Command("sudo", "/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key").Output()
 	exec.Command("sudo", "/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
 
