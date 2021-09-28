@@ -225,7 +225,6 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
-	exec.Command("/bin/chmod", "777", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key").Output()
 	exec.Command("/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt").Output()
 	exec.Command("/bin/cp", "-f", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
 	exec.Command("/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key").Output()
