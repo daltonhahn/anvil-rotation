@@ -225,8 +225,11 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
         newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/certs", pullMap.Iteration)
         os.MkdirAll(newpath, os.ModePerm)
 	hname, _ := os.Hostname()
+	fmt.Printf("---COPYING FILES IN ROTATION---")
 	exec.Command("/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt").Output()
+	fmt.Printf("---COPYING KEY IN ROTATION---")
 	exec.Command("/bin/cp", "-f", "/home/anvil/Destkop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key").Output()
+	fmt.Printf("---DONE COPYING KEY---")
 	exec.Command("/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/gossip.key", "/home/anvil/Desktop/anvil/config/gossip/"+pullMap.Iteration+"/gossip.key").Output()
 	exec.Command("/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/artifacts/"+pullMap.Iteration+"/"+hname+"/acl.yaml", "/home/anvil/Desktop/anvil/config/acls/"+pullMap.Iteration+"/acl.yaml").Output()
 
