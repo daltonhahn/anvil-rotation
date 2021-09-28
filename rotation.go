@@ -228,7 +228,7 @@ func CollectSignal(w http.ResponseWriter, req *http.Request) {
 	exec.Command("sudo", "/bin/cp", "-f", "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".crt", "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".crt").Output()
 
 	src := "/home/anvil/Desktop/anvil-rotation/config/"+pullMap.Iteration+"/"+hname+".key"
-	dest := "/home/anvil/Desktop/anvil/config/certs"+pullMap.Iteration+"/"+hname+".key"
+	dest := "/home/anvil/Desktop/anvil/config/certs/"+pullMap.Iteration+"/"+hname+".key"
 
 	bytesRead, err := ioutil.ReadFile(src)
 
