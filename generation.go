@@ -88,6 +88,7 @@ func GenCA(iteration int, numQ int) {
 			keyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
 			pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/config/"+strconv.Itoa(iteration)+"/anvilserver"+strconv.Itoa(i)+".key")
 			_ = pemfile.Chmod(0777)
+			_ = pemfile.Chown(os.Getuid(), os.Getgid())
 			marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(keyBytes)
 			var pemkey = &pem.Block{
 				Type : "EC PRIVATE KEY",
@@ -162,6 +163,7 @@ func GenPairs(nodeName string, iteration int, prefix string, quorumMems []string
         keyBytes, _ := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
         pemfile, _ := os.Create("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/"+nodeName+"/"+nodeName+".key")
 	_ = pemfile.Chmod(0777)
+	_ = pemfile.Chown(os.Getuid(), os.Getgid())
 	marshKeyBytes, _ := x509.MarshalPKCS8PrivateKey(keyBytes)
         var pemkey = &pem.Block{
 		Type : "EC PRIVATE KEY",
