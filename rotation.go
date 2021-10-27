@@ -91,7 +91,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		log.Fatal()
+		log.Fatal(err)
 	}
 	cMap = []CollectMap{}
 
@@ -126,6 +126,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
+		fmt.Println("Processing missMap")
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
@@ -133,7 +134,7 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		err = json.Unmarshal(body, &missMap)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
-			log.Fatal()
+			log.Fatal(err)
 		}
 
 		for _, d := range missMap.Directories {
