@@ -72,9 +72,7 @@ func RetrieveBundle(w http.ResponseWriter, req *http.Request) {
 	var filepath FPMess
         err = json.Unmarshal(b, &filepath)
         if err != nil {
-		fmt.Println("Failing here?")
                 log.Fatal(err)
-		fmt.Println("YUP, FAILING HERE")
         }
 	path := "/home/anvil/Desktop/anvil-rotation/artifacts/"+iter+"/"+filepath.FilePath
 	w.Header().Set("Content-Type", "application/text")
@@ -88,9 +86,11 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		Targets		[]string
 		Iteration	string
 	}{}
+	fmt.Println(b)
 	err = json.Unmarshal(b, &pullMap)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
+		fmt.Println("FAILING ON PULLMAP PROCESSING")
 		log.Fatal(err)
 	}
 	cMap = []CollectMap{}
@@ -126,7 +126,6 @@ func PrepBundle(w http.ResponseWriter, req *http.Request) {
 		b, err = ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		*/
-		fmt.Println("Processing missMap")
 		missMap := struct {
 			Directories	[]string
 			FPaths		[]string
